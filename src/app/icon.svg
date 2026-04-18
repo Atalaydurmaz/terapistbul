@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <circle cx="32" cy="32" r="30" fill="white" stroke="#1a56db" stroke-width="3.5"/>
+  <!-- Head -->
+  <circle cx="32" cy="18" r="6" fill="#0d9488"/>
+  <!-- Body -->
+  <line x1="32" y1="24" x2="32" y2="38" stroke="#0d9488" stroke-width="6" stroke-linecap="round"/>
+  <!-- Left arm -->
+  <path d="M32 29 Q22 27 16 24" stroke="#0d9488" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Right arm -->
+  <path d="M32 29 Q42 27 48 24" stroke="#0d9488" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- White hugging hand -->
+  <path d="M27 33 Q20 31 17 36 Q21 41 28 37 Z" fill="white"/>
+  <!-- Smile -->
+  <path d="M20 50 Q32 60 44 50" stroke="#0d9488" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+</svg>

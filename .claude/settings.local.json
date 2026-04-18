@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:3456/api/chat -H \"Content-Type: application/json\" -d '{\"\"messages\"\":[{\"\"role\"\":\"\"user\"\",\"\"content\"\":\"\"merhaba\"\"}]}')",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Read(//c/Users/ATALAY/kozmetik-shop/src/app/**)",
+      "Read(//c/Users/ATALAY/kozmetik-shop/src/components/**)",
+      "Bash(netstat -ano)",
+      "Bash(cmd /c \"taskkill /F /PID 58520\")",
+      "Bash(cmd.exe /c \"taskkill /F /PID 58520\")",
+      "Bash(cmd.exe /c \"tasklist /FI \"\"PID eq 58520\"\"\")",
+      "Bash(cmd.exe /c \"netstat -ano | findstr :3000\")",
+      "Bash(npx next:*)",
+      "Bash(cmd.exe /c \"taskkill /F /IM node.exe\")"
+    ]
+  },
+  "worktrees": false,
+  "autoWorktree": false
+}
