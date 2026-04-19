@@ -1,17 +1,21 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-const MESSAGES_FILE = join(process.cwd(), 'src', 'data', 'messages.json');
+function isValidUuid(v) {
+  return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
 
 export async function DELETE(req, { params }) {
   try {
     const { id: idParam } = await params;
-    const messages = JSON.parse(readFileSync(MESSAGES_FILE, 'utf8'));
-    const id = Number(idParam);
-    const filtered = messages.filter((m) => m.id !== id);
-    writeFileSync(MESSAGES_FILE, JSON.stringify(filtered, null, 2));
+    if (!isValidUuid(idParam)) {
+      return Response.json({ error: 'Geçersiz ID' }, { status: 400 });
+    }
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('appointments').delete().eq('id', idParam);
+    if (error) return Response.json({ error: error.message }, { status: 500 });
     return Response.json({ success: true });
-  } catch {
+  } catch (e) {
+    console.error('panel messages DELETE error:', e);
     return Response.json({ error: 'Silinemedi.' }, { status: 500 });
   }
 }

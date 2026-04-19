@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 const statusConfig = {
   bekliyor: { label: 'Bekliyor', bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
@@ -59,23 +60,46 @@ export default function HesabimPage() {
     });
   };
 
+  const loadMessages = useCallback(async () => {
+    try {
+      const r = await fetch('/api/hesabim/mesajlar');
+      const data = await r.json();
+      setMessages(data);
+      setLoading(false);
+      setSelectedTherapist((current) => {
+        if (current) return current;
+        const firstMsg = data.find((m) => m.type !== 'randevu');
+        return firstMsg ? firstMsg.therapistName : null;
+      });
+    } catch {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/giris');
       return;
     }
-    if (status === 'authenticated') {
-      fetch('/api/hesabim/mesajlar')
-        .then((r) => r.json())
-        .then((data) => {
-          setMessages(data);
-          setLoading(false);
-          const firstMsg = data.find((m) => m.type !== 'randevu');
-          if (firstMsg) setSelectedTherapist(firstMsg.therapistName);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [status, router]);
+    if (status !== 'authenticated') return;
+
+    loadMessages();
+
+    const userEmail = session?.user?.email?.toLowerCase();
+    if (!userEmail) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`hesabim-${userEmail}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments', filter: `email=eq.${userEmail}` },
+        loadMessages,
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [status, router, session?.user?.email, loadMessages]);
 
   if (status === 'loading' || loading) {
     return (

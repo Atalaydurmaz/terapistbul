@@ -1,0 +1,20 @@
+{
+  "name": "terapibul-e2e-tests",
+  "version": "1.0.0",
+  "description": "TerapistBul E2E Playwright Testleri",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install chromium",
+    "test:admin": "playwright test 01-admin-panel.spec.js",
+    "test:therapist": "playwright test 02-therapist-panel.spec.js",
+    "test:client": "playwright test 03-client-booking.spec.js",
+    "test:sync": "playwright test 04-sync-verification.spec.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

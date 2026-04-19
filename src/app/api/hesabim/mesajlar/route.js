@@ -1,9 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import { auth } from '../../../../auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const MESSAGES_FILE = join(process.cwd(), 'src', 'data', 'messages.json');
 
 export async function POST(req) {
   const session = await auth();
@@ -15,22 +11,40 @@ export async function POST(req) {
     if (!note?.trim() || !therapistName) {
       return Response.json({ error: 'Eksik alan' }, { status: 400 });
     }
-    const messages = JSON.parse(readFileSync(MESSAGES_FILE, 'utf8'));
-    const newMsg = {
-      name: session.user.name || '',
-      email: session.user.email,
-      phone: '',
-      note: note.trim(),
-      therapistName,
-      therapistEmail: therapistEmail || '',
-      type: type || 'mesaj',
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-    };
-    messages.push(newMsg);
-    writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
-    return Response.json(newMsg);
-  } catch {
+
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([{
+        name: session.user.name || '',
+        email: session.user.email,
+        phone: null,
+        note: note.trim(),
+        therapist_name: therapistName,
+        therapist_email: therapistEmail || null,
+        type: type || 'mesaj',
+        status: type === 'randevu' ? 'bekliyor' : null,
+      }])
+      .select()
+      .single();
+
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+
+    // İstemci eski alan adlarını bekliyor — uyumluluk için map'le
+    return Response.json({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      note: data.note,
+      therapistName: data.therapist_name,
+      therapistEmail: data.therapist_email,
+      type: data.type,
+      status: data.status,
+      createdAt: data.created_at,
+      supabaseId: data.id,
+    });
+  } catch (e) {
+    console.error('hesabim POST error:', e);
     return Response.json({ error: 'Gönderilemedi' }, { status: 500 });
   }
 }
@@ -42,81 +56,41 @@ export async function GET() {
   }
 
   try {
-    const messages = JSON.parse(readFileSync(MESSAGES_FILE, 'utf8'));
     const userEmail = session.user.email.toLowerCase();
-    const userMessages = messages.filter(
-      (m) => m.email?.toLowerCase() === userEmail || m.toEmail?.toLowerCase() === userEmail
-    );
+    const supabase = createAdminClient();
 
-    // Randevular için Supabase'den güncel status ve daily_room_url çek
-    const randevuIds = userMessages.filter((m) => m.type === 'randevu' && m.supabaseId).map((m) => m.supabaseId);
-    let supabaseMap = {};
-    if (randevuIds.length > 0) {
-      const supabase = createAdminClient();
-      const { data } = await supabase
-        .from('appointments')
-        .select('id, status, daily_room_url, therapist_name')
-        .in('id', randevuIds);
-      if (data) data.forEach((row) => { supabaseMap[row.id] = row; });
-    }
-
-    // messages.json'daki randevular için email ile de eşleştir
-    const supabase2 = createAdminClient();
-    const { data: supabaseRandevular } = await supabase2
+    const { data, error } = await supabase
       .from('appointments')
-      .select('id, status, daily_room_url, therapist_name, selected_day, selected_hour, created_at, name, email')
-      .eq('email', userEmail);
+      .select('id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, created_at, updated_at, direction')
+      .eq('email', userEmail)
+      .order('created_at', { ascending: false });
 
-    const supabaseEmailMap = {};
-    if (supabaseRandevular) {
-      supabaseRandevular.forEach((row) => { supabaseEmailMap[row.id] = row; });
+    if (error) {
+      console.error('hesabim GET error:', error);
+      return Response.json([]);
     }
 
-    // userMessages içindeki randevuları güncelle
-    const enriched = userMessages.map((m) => {
-      if (m.type !== 'randevu') return m;
-      // supabaseId ile eşleştir
-      if (m.supabaseId && supabaseMap[m.supabaseId]) {
-        const sb = supabaseMap[m.supabaseId];
-        return { ...m, status: sb.status, daily_room_url: sb.daily_room_url };
-      }
-      // email + therapistName ile supabase randevusunu bul
-      if (supabaseRandevular) {
-        const match = supabaseRandevular.find(
-          (sb) => sb.email?.toLowerCase() === userEmail &&
-          (sb.therapist_name === m.therapistName || sb.therapist_name === m.name)
-        );
-        if (match) return { ...m, status: match.status, daily_room_url: match.daily_room_url, supabaseId: match.id };
-      }
-      return m;
-    });
+    // Client tarafı eski alan adlarını kullanıyor — geri uyumluluk
+    const mapped = (data || []).map((row) => ({
+      id: row.id,
+      supabaseId: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      note: row.note,
+      therapistName: row.therapist_name,
+      therapistEmail: row.therapist_email,
+      type: row.type,
+      status: row.status,
+      selectedDay: row.selected_day,
+      selectedHour: row.selected_hour,
+      daily_room_url: row.daily_room_url,
+      direction: row.direction,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
 
-    // Supabase'de olup messages.json'da olmayan randevuları da ekle
-    if (supabaseRandevular) {
-      for (const sb of supabaseRandevular) {
-        const exists = enriched.some(
-          (m) => m.type === 'randevu' && (m.supabaseId === sb.id ||
-            (m.email?.toLowerCase() === userEmail && m.therapistName === sb.therapist_name))
-        );
-        if (!exists) {
-          enriched.push({
-            id: sb.id,
-            supabaseId: sb.id,
-            name: sb.name,
-            email: sb.email,
-            therapistName: sb.therapist_name,
-            selectedDay: sb.selected_day,
-            selectedHour: sb.selected_hour,
-            type: 'randevu',
-            status: sb.status,
-            daily_room_url: sb.daily_room_url,
-            createdAt: sb.created_at,
-          });
-        }
-      }
-    }
-
-    return Response.json(enriched);
+    return Response.json(mapped);
   } catch (e) {
     console.error('hesabim GET error:', e);
     return Response.json([]);

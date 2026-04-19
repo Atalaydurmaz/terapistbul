@@ -16,15 +16,24 @@ export default function AdminGirisPage() {
     setError('');
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (email === 'admin@terapistbul.com' && password === 'admin123') {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('admin_auth', 'true');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('admin_auth', 'true');
+        }
+        router.push('/admin/dashboard');
+      } else {
+        setError(data.error || 'Geçersiz e-posta veya şifre.');
+        setLoading(false);
       }
-      router.push('/admin/dashboard');
-    } else {
-      setError('Geçersiz e-posta veya şifre. Demo: admin@terapistbul.com / admin123');
+    } catch {
+      setError('Bağlantı hatası. Tekrar deneyin.');
       setLoading(false);
     }
   };

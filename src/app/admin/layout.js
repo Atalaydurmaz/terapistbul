@@ -132,7 +132,10 @@ export default function AdminLayout({ children }) {
 
   const pageTitle = pageTitles[pathname] || 'Admin Panel';
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/login', { method: 'DELETE' });
+    } catch {}
     if (typeof window !== 'undefined') {
       localStorage.removeItem('admin_auth');
     }

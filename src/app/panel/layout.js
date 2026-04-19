@@ -127,9 +127,13 @@ export default function PanelLayout({ children }) {
 
   const pageTitle = pageTitles[pathname] || 'Panel';
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/panel/login', { method: 'DELETE' });
+    } catch {}
     if (typeof window !== 'undefined') {
       localStorage.removeItem('panel_auth');
+      localStorage.removeItem('panel_therapist_id');
     }
     router.push('/panel/giris');
   };

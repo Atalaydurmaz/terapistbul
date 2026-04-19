@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 const topTherapists = [
   { name: 'Dr. Ayşe Kaya', rating: 4.9, reviews: 63, city: 'İstanbul' },
@@ -49,8 +50,20 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     load();
-    const iv = setInterval(load, 8000);
-    return () => clearInterval(iv);
+    const supabase = createClient();
+    const channel = supabase
+      .channel('admin-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'applications' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'therapists' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, load)
+      .subscribe();
+    // Fallback polling (realtime disabled veya bağlantı koparsa)
+    const iv = setInterval(load, 30000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(iv);
+    };
   }, [load]);
 
   const handleAppAction = async (id, status) => {
