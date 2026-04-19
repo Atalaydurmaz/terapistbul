@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://terapibul.vercel.app"><img src="https://img.shields.io/badge/🌐_Canlı_Demo-terapibul.vercel.app-0f766e?style=for-the-badge" alt="Canlı Demo" /></a>
-  <a href="https://terapibul.vercel.app"><img src="https://img.shields.io/badge/▲_Vercel-Deploy-000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
+  <a href="https://terapibul-weld.vercel.app"><img src="https://img.shields.io/badge/🌐_Canlı_Demo-terapibul--weld.vercel.app-0f766e?style=for-the-badge" alt="Canlı Demo" /></a>
+  <a href="https://terapibul-weld.vercel.app"><img src="https://img.shields.io/badge/▲_Vercel-Deploy-000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
   <img src="https://img.shields.io/badge/Next.js-16-000?style=for-the-badge&logo=next.js&logoColor=white" />
   <img src="https://img.shields.io/badge/React-19-20232a?style=for-the-badge&logo=react&logoColor=61dafb" />
   <img src="https://img.shields.io/badge/Supabase-Realtime-3ecf8e?style=for-the-badge&logo=supabase&logoColor=white" />
