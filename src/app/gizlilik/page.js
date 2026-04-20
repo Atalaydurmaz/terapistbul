@@ -116,7 +116,7 @@ export default function GizlilikPage() {
             <li>İşlemeye itiraz etme ve zararın tazminini talep etme</li>
           </ul>
           <p>
-            Bu haklarınızı kullanmak için <strong>kvkk@terapistbul.com</strong> adresine e-posta gönderebilirsiniz.
+            Bu haklarınızı kullanmak için <strong>destek@terapistibul.com</strong> adresine e-posta gönderebilirsiniz.
           </p>
         </Section>
 
@@ -131,7 +131,7 @@ export default function GizlilikPage() {
             Gizlilik politikamıza ilişkin sorularınız için:
           </p>
           <ul className="list-none space-y-1 pl-2">
-            <li><strong>E-posta:</strong> destek@terapistbul.com</li>
+            <li><strong>E-posta:</strong> destek@terapistibul.com</li>
             <li><strong>Adres:</strong> Maslak Mahallesi, Büyükdere Cad. No:255, Sarıyer / İstanbul</li>
           </ul>
         </Section>

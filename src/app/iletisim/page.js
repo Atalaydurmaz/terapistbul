@@ -14,7 +14,7 @@ const contactInfo = [
       </svg>
     ),
     label: 'E-posta',
-    value: 'destek@terapistbul.com',
+    value: 'destek@terapistibul.com',
     sub: 'Genellikle 24 saat içinde yanıtlarız',
   },
   {

@@ -64,7 +64,7 @@ export async function POST(req) {
               </p>
             </div>
             <p style="color:#64748b;font-size:13px;margin:0 0 20px;">
-              Sorularınız için <a href="mailto:destek@terapistbul.com" style="color:#0d9488;">destek@terapistbul.com</a> adresine ulaşabilirsiniz.
+              Sorularınız için <a href="mailto:destek@terapistibul.com" style="color:#0d9488;">destek@terapistibul.com</a> adresine ulaşabilirsiniz.
             </p>
             <a href="https://terapistbul.com/uye-ol" style="display:inline-block;background:#64748b;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">
               Tekrar Başvur →

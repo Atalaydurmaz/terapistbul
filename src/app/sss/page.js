@@ -69,7 +69,7 @@ const categories = [
       },
       {
         q: 'İlk seansı beğenmezsem para iadesi alabilir miyim?',
-        a: 'Evet. İlk seans için para iadesi garantimiz mevcuttur. Seans tarihinden itibaren 48 saat içinde destek@terapistbul.com adresine talebinizi iletmeniz yeterlidir. Değerlendirme sonucunda uygun bulunması halinde ödeme iade edilir.',
+        a: 'Evet. İlk seans için para iadesi garantimiz mevcuttur. Seans tarihinden itibaren 48 saat içinde destek@terapistibul.com adresine talebinizi iletmeniz yeterlidir. Değerlendirme sonucunda uygun bulunması halinde ödeme iade edilir.',
       },
     ],
   },
@@ -111,7 +111,7 @@ const categories = [
       },
       {
         q: 'Fatura alabilir miyim?',
-        a: 'Evet. Ödeme sonrasında e-posta adresinize fatura iletilir. Kurumsal fatura talebi için destek@terapistbul.com adresine başvurabilirsiniz.',
+        a: 'Evet. Ödeme sonrasında e-posta adresinize fatura iletilir. Kurumsal fatura talebi için destek@terapistibul.com adresine başvurabilirsiniz.',
       },
       {
         q: 'Sigortam seans ücretini karşılar mı?',
@@ -134,7 +134,7 @@ const categories = [
       },
       {
         q: 'Verilerimi sildirebilir miyim?',
-        a: 'Evet. Hesabınızı silmek için Hesap Ayarları sayfasını kullanabilir ya da kvkk@terapistbul.com adresine e-posta gönderebilirsiniz. Hesap silinmesinin ardından 30 gün içinde verileriniz sistemden kalıcı olarak kaldırılır.',
+        a: 'Evet. Hesabınızı silmek için Hesap Ayarları sayfasını kullanabilir ya da destek@terapistibul.com adresine e-posta gönderebilirsiniz. Hesap silinmesinin ardından 30 gün içinde verileriniz sistemden kalıcı olarak kaldırılır.',
       },
       {
         q: 'KVKK kapsamındaki haklarım neler?',

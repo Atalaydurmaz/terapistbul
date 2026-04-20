@@ -12,7 +12,7 @@ export async function POST(req) {
 
     await resend.emails.send({
       from: 'TerapistBul <onboarding@resend.dev>',
-      to: process.env.CONTACT_EMAIL || 'info@terapistbul.com',
+      to: process.env.CONTACT_EMAIL || 'info@terapistibul.com',
       replyTo: email,
       subject: `[İletişim Formu] ${subject || 'Genel Soru'} — ${name}`,
       html: `

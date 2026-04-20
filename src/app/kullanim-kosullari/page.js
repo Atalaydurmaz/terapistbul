@@ -45,7 +45,7 @@ export default function KullanimKosullariPage() {
 
         <Section title="3. Kullanıcı Hesabı">
           <p>
-            Platforma kayıt olurken doğru, güncel ve eksiksiz bilgi vermeyi kabul edersiniz. Hesap güvenliğinizden ve şifrenizin gizliliğinden siz sorumlusunuz. Hesabınızın yetkisiz kullanıldığını fark ettiğinizde derhal destek@terapistbul.com adresine bildirmeniz gerekmektedir.
+            Platforma kayıt olurken doğru, güncel ve eksiksiz bilgi vermeyi kabul edersiniz. Hesap güvenliğinizden ve şifrenizin gizliliğinden siz sorumlusunuz. Hesabınızın yetkisiz kullanıldığını fark ettiğinizde derhal destek@terapistibul.com adresine bildirmeniz gerekmektedir.
           </p>
           <p>
             Bir hesap yalnızca bir kişiye aittir; başkasının adına hesap oluşturulamaz.
@@ -79,7 +79,7 @@ export default function KullanimKosullariPage() {
             TerapistBul'da terapist arama ve eşleştirme hizmeti ücretsizdir. Seans ücretleri terapist ile danışan arasındaki anlaşmaya göre belirlenir. Ödeme işlemleri güvenli ödeme altyapısı üzerinden gerçekleştirilir.
           </p>
           <p>
-            İlk seans için para iadesi talebi, seans tarihinden itibaren 48 saat içinde destek@terapistbul.com adresine yapılmalıdır. İptal politikası terapistlere göre farklılık gösterebilir; detaylar ilgili terapist profilinde belirtilir.
+            İlk seans için para iadesi talebi, seans tarihinden itibaren 48 saat içinde destek@terapistibul.com adresine yapılmalıdır. İptal politikası terapistlere göre farklılık gösterebilir; detaylar ilgili terapist profilinde belirtilir.
           </p>
         </Section>
 
@@ -118,7 +118,7 @@ export default function KullanimKosullariPage() {
 
         <Section title="12. İletişim">
           <p>
-            Bu koşullara ilişkin sorularınız için <strong>destek@terapistbul.com</strong> adresine yazabilirsiniz.
+            Bu koşullara ilişkin sorularınız için <strong>destek@terapistibul.com</strong> adresine yazabilirsiniz.
           </p>
         </Section>
 

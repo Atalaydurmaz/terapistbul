@@ -38,7 +38,7 @@ export default function KvkkPage() {
           <ul className="list-none space-y-1">
             <li><strong>Unvan:</strong> TerapistBul Teknoloji A.Ş.</li>
             <li><strong>Adres:</strong> Maslak Mahallesi, Büyükdere Cad. No:255, Sarıyer / İstanbul</li>
-            <li><strong>E-posta:</strong> kvkk@terapistbul.com</li>
+            <li><strong>E-posta:</strong> destek@terapistibul.com</li>
             <li><strong>MERSİS No:</strong> 0123456789012345</li>
           </ul>
         </Section>

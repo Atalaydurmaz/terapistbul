@@ -61,7 +61,7 @@ const faqs = {
   ],
   odeme: [
     { q: 'Hangi ödeme yöntemleri kabul ediliyor?', a: 'Kredi kartı, banka kartı ve havale/EFT ile ödeme yapabilirsiniz. Tüm ödemeler SSL şifreli güvenli altyapı üzerinden işlenir.' },
-    { q: 'Para iadesi alabilir miyim?', a: 'İlk seans için memnun kalmazsanız 48 saat içinde destek@terapistbul.com adresine yazarak para iadesi talep edebilirsiniz.' },
+    { q: 'Para iadesi alabilir miyim?', a: 'İlk seans için memnun kalmazsanız 48 saat içinde destek@terapistibul.com adresine yazarak para iadesi talep edebilirsiniz.' },
     { q: 'Fatura nasıl alırım?', a: 'Ödeme sonrasında fatura otomatik olarak e-posta adresinize gönderilir. Geçmiş faturalarınıza hesap panelinizdeki "Ödemeler" bölümünden ulaşabilirsiniz.' },
   ],
   gizlilik: [
@@ -138,9 +138,9 @@ export default function DestekPage() {
             {
               icon: '✉️',
               title: 'E-posta',
-              value: 'destek@terapistbul.com',
+              value: 'destek@terapistibul.com',
               sub: 'Genellikle 24 saat içinde yanıt',
-              href: 'mailto:destek@terapistbul.com',
+              href: 'mailto:destek@terapistibul.com',
             },
             {
               icon: '💬',
