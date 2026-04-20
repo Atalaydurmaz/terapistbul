@@ -11,9 +11,18 @@ export default function RootLayoutClient({ children }) {
   const pathname = usePathname();
   const isPanelRoute = pathname?.startsWith('/panel');
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isVideoCallRoute = pathname === '/gorusme';
 
   if (isPanelRoute || isAdminRoute) {
     return <SessionProvider>{children}</SessionProvider>;
+  }
+
+  if (isVideoCallRoute) {
+    return (
+      <SessionProvider>
+        <main className="flex-1">{children}</main>
+      </SessionProvider>
+    );
   }
 
   return (
