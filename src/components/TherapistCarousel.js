@@ -14,77 +14,78 @@ export default function TherapistCarousel() {
   const wrapperRef = useRef(null);
   const trackRef = useRef(null);
   const rafRef = useRef(null);
-  const offsetRef = useRef(0);       // current scroll offset
-  const speedRef = useRef(0);        // current speed (px/frame, + = right scroll)
-  const isHoverRef = useRef(false);
+  const offsetRef = useRef(0);
+  const speedRef = useRef(0);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  const total = therapists.length; // 43
+  const total = therapists.length;
   const totalWidth = total * STEP;
 
-  // Infinite scroll: duplicate list so we can loop seamlessly
-  const doubled = [...therapists, ...therapists];
+  const doubled = isDesktop ? [...therapists, ...therapists] : therapists;
 
-  // Animation loop
   useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px) and (pointer: fine)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  // Auto-scroll + mouse-follow only on desktop
+  useEffect(() => {
+    if (!isDesktop) {
+      if (trackRef.current) trackRef.current.style.transform = '';
+      offsetRef.current = 0;
+      speedRef.current = 0;
+      return;
+    }
     const loop = () => {
       offsetRef.current += speedRef.current;
-
-      // Seamless loop: when we've scrolled past the first copy, reset
       if (offsetRef.current >= totalWidth) offsetRef.current -= totalWidth;
       if (offsetRef.current < 0) offsetRef.current += totalWidth;
-
       if (trackRef.current) {
         trackRef.current.style.transform = `translateX(-${offsetRef.current}px)`;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
-    speedRef.current = 1; // default auto-scroll speed
+    speedRef.current = 1;
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [totalWidth]);
+  }, [isDesktop, totalWidth]);
 
   const handleMouseMove = (e) => {
+    if (!isDesktop) return;
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const rect = wrapper.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const ratio = x / rect.width; // 0 = far left, 1 = far right
-
-    // Dead zone in the center (0.35–0.65) → slow auto scroll
+    const ratio = x / rect.width;
     if (ratio < 0.35) {
-      // Left zone: scroll backward
-      const intensity = (0.35 - ratio) / 0.35; // 0→1
+      const intensity = (0.35 - ratio) / 0.35;
       speedRef.current = -intensity * MAX_SPEED;
     } else if (ratio > 0.65) {
-      // Right zone: scroll forward faster
-      const intensity = (ratio - 0.65) / 0.35; // 0→1
+      const intensity = (ratio - 0.65) / 0.35;
       speedRef.current = 1 + intensity * (MAX_SPEED - 1);
     } else {
-      // Center: gentle auto-scroll
       speedRef.current = 0.5;
     }
   };
 
   const handleMouseLeave = () => {
-    isHoverRef.current = false;
-    speedRef.current = 1; // resume normal auto-scroll
+    speedRef.current = 1;
   };
 
-  const handleMouseEnter = () => {
-    isHoverRef.current = true;
-  };
-
-  // Dot indicators (group of 4)
   const groupCount = Math.ceil(total / 4);
   const [activeGroup, setActiveGroup] = useState(0);
 
   useEffect(() => {
+    if (!isDesktop) return;
     const interval = setInterval(() => {
       const group = Math.floor((offsetRef.current / STEP) % total / 4);
       setActiveGroup(Math.min(group, groupCount - 1));
     }, 300);
     return () => clearInterval(interval);
-  }, [total, groupCount]);
+  }, [isDesktop, total, groupCount]);
 
   return (
     <section className="py-16 bg-white">
@@ -112,14 +113,17 @@ export default function TherapistCarousel() {
         {/* Track */}
         <div
           ref={wrapperRef}
-          className="relative overflow-hidden cursor-ew-resize select-none"
-          onMouseMove={handleMouseMove}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+          className={`relative select-none ${isDesktop ? 'overflow-hidden cursor-ew-resize' : 'overflow-x-auto overflow-y-hidden scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6'}`}
+          style={isDesktop ? undefined : { WebkitOverflowScrolling: 'touch' }}
+          onMouseMove={isDesktop ? handleMouseMove : undefined}
+          onMouseLeave={isDesktop ? handleMouseLeave : undefined}
         >
-          {/* Edge fades */}
-          <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white to-transparent z-10" />
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent z-10" />
+          {isDesktop && (
+            <>
+              <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white to-transparent z-10" />
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent z-10" />
+            </>
+          )}
 
           <div
             ref={trackRef}
@@ -134,24 +138,26 @@ export default function TherapistCarousel() {
           </div>
         </div>
 
-        {/* Hint */}
-        <p className="text-center text-xs text-slate-400 mt-4 select-none">
-          ← fareyi sola götürün · sağa götürün →
-        </p>
+        {isDesktop && (
+          <>
+            <p className="text-center text-xs text-slate-400 mt-4 select-none">
+              ← fareyi sola götürün · sağa götürün →
+            </p>
 
-        {/* Dot indicators */}
-        <div className="flex justify-center gap-1.5 mt-3">
-          {Array.from({ length: groupCount }).map((_, i) => (
-            <div
-              key={i}
-              className={`rounded-full transition-all duration-300 ${
-                i === activeGroup
-                  ? 'bg-teal-500 w-6 h-2'
-                  : 'bg-slate-200 w-2 h-2'
-              }`}
-            />
-          ))}
-        </div>
+            <div className="flex justify-center gap-1.5 mt-3">
+              {Array.from({ length: groupCount }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === activeGroup
+                      ? 'bg-teal-500 w-6 h-2'
+                      : 'bg-slate-200 w-2 h-2'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
