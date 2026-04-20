@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
+import { fmtDateTr } from '@/lib/date';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const DAILY_API = 'https://api.daily.co/v1';
@@ -108,7 +109,7 @@ export async function PATCH(req, { params }) {
           <h2 style="color:#0d9488;">✅ Randevunuz Onaylandı</h2>
           <p>Sayın <strong>${data.name}</strong>,</p>
           <p><strong>${data.therapist_name}</strong> ile randevunuz onaylandı.</p>
-          <p>📅 <strong>${data.selected_day || '—'}</strong> saat <strong>${data.selected_hour || '—'}</strong></p>
+          <p>📅 <strong>${data.selected_day ? fmtDateTr(data.selected_day) : '—'}</strong> saat <strong>${data.selected_hour || '—'}</strong></p>
           ${videoLink}
           <p style="color:#64748b;font-size:13px;">Görüşme saatinde linke tıklayarak odaya girebilirsiniz.</p>
         </div>`,
