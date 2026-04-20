@@ -85,3 +85,12 @@ html {
 .bg-gradient-hero {
   background: linear-gradient(160deg, #e6fdf7 0%, #f0fdfa 50%, #f0fdf4 100%);
 }
+
+/* Hide scrollbar for horizontal sliders */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
