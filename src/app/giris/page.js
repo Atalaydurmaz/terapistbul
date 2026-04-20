@@ -16,7 +16,7 @@ export default function GirisPage() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    await signIn('google', { callbackUrl: '/terapistler' });
+    await signIn('google', { callbackUrl: '/' });
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
