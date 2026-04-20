@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { fmtDateTr } from '@/lib/date';
 
 const colors = [
   'bg-blue-100 text-blue-700',
@@ -195,7 +196,7 @@ export default function RandevularPage() {
                             <line x1="8" y1="2" x2="8" y2="6" />
                             <line x1="3" y1="10" x2="21" y2="10" />
                           </svg>
-                          {apt.selectedDay}
+                          {fmtDateTr(apt.selectedDay)}
                         </span>
                       )}
                       <span className="flex items-center gap-1">
@@ -302,7 +303,7 @@ export default function RandevularPage() {
                       {apt.selectedDay && (
                         <div>
                           <p className="text-slate-400 text-xs mb-0.5">Randevu Günü</p>
-                          <p className="font-medium text-teal-700">{apt.selectedDay}</p>
+                          <p className="font-medium text-teal-700">{fmtDateTr(apt.selectedDay)}</p>
                         </div>
                       )}
                       <div>

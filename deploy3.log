@@ -1,0 +1,20 @@
+<claude-code-hint v="1" type="plugin" value="vercel@claude-plugins-official" />
+Retrieving project…
+Deploying atalays-projects-66df22ce/terapibul
+Uploading [--------------------] (0.0B/9.8KB)
+Uploading [===================-] (9.6KB/9.8KB)
+Uploading [====================] (9.8KB/9.8KB)
+Uploading [====================] (9.8KB/9.8KB)
+Uploading [====================] (9.8KB/9.8KB)
+{
+  "status": "error",
+  "reason": "deploy_failed",
+  "message": "FetchError: request to https://api.vercel.com/v2/files?teamId=team_orHfCk4r3OoNbHmUe8lkGIFi failed, reason: read ECONNRESET",
+  "next": [
+    {
+      "command": "vercel deploy",
+      "when": "retry deploy"
+    }
+  ]
+}
+Error: FetchError: request to https://api.vercel.com/v2/files?teamId=team_orHfCk4r3OoNbHmUe8lkGIFi failed, reason: read ECONNRESET

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { fmtDateTr } from '@/lib/date';
 
 const statusConfig = {
   bekliyor: { label: 'Bekliyor', bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
@@ -367,7 +368,7 @@ export default function HesabimPage() {
                                 <line x1="8" y1="2" x2="8" y2="6" />
                                 <line x1="3" y1="10" x2="21" y2="10" />
                               </svg>
-                              {r.selectedDay || r.selected_day}
+                              {fmtDateTr(r.selectedDay || r.selected_day)}
                             </span>
                           )}
                           {(r.selectedHour || r.selected_hour) && (

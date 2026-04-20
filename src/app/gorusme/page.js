@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 function Clock() {
   const [time, setTime] = useState('');
@@ -61,49 +62,53 @@ function GorusmeContent() {
   return (
     <div className="flex flex-col h-screen bg-[#0f172a]">
       {/* Header */}
-      <header className="flex-shrink-0 bg-[#0f172a] border-b border-white/[0.06]">
-        <div className="flex items-center justify-between px-5 h-14">
+      <header className="flex-shrink-0 bg-[#0f172a] border-b border-white/[0.06] relative">
+        <div className="flex items-center justify-between px-3 sm:px-5 h-14 gap-2">
 
-          {/* Sol */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-teal-500 rounded-lg flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <span className="text-white font-semibold text-sm">TerapistBul</span>
-            </div>
+          {/* Sol: Logo */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <Link href="/" className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <Image src="/logo.svg" alt="TerapistBul" width={28} height={28} priority />
+              <span className="text-sm font-bold whitespace-nowrap">
+                <span className="text-blue-300">Terapist</span><span className="text-green-400">Bul</span>
+              </span>
+            </Link>
 
-            <div className="w-px h-4 bg-white/10" />
+            <div className="hidden sm:block w-px h-4 bg-white/10" />
 
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
               <span className="text-slate-300 text-xs font-medium">Canlı Seans</span>
             </div>
 
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-lg border border-white/[0.06]">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-lg border border-white/[0.06]">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
-              <span className="text-slate-300 text-xs">{therapistName}</span>
+              <span className="text-slate-300 text-xs truncate max-w-[180px]">{therapistName}</span>
             </div>
           </div>
 
-          {/* Orta */}
-          <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
+          {/* Orta: Sayaç (mobilde sağa taşınır) */}
+          <div className="hidden sm:flex items-center gap-4 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/[0.06]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
               <span className="text-slate-300 text-xs font-mono"><SessionTimer /></span>
             </div>
-            <span className="text-slate-500 text-xs font-mono hidden sm:block"><Clock /></span>
+            <span className="text-slate-500 text-xs font-mono hidden md:block"><Clock /></span>
+          </div>
+
+          {/* Mobil: küçük sayaç */}
+          <div className="flex sm:hidden items-center gap-1 px-2 py-1 bg-white/5 rounded-lg border border-white/[0.06]">
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-slate-300 text-[11px] font-mono tabular-nums"><SessionTimer /></span>
           </div>
 
           {/* Sağ */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-lg border border-white/[0.06]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-lg border border-white/[0.06]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
@@ -112,12 +117,14 @@ function GorusmeContent() {
 
             <Link
               href={leaveHref}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 text-xs font-medium rounded-xl transition-all"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 text-xs font-medium rounded-xl transition-all"
+              aria-label="Görüşmeden Ayrıl"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Görüşmeden Ayrıl
+              <span className="hidden sm:inline">Görüşmeden Ayrıl</span>
+              <span className="sm:hidden">Ayrıl</span>
             </Link>
           </div>
         </div>

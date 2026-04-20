@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { fmtDateTr } from '@/lib/date';
 
 const tabs = ['Tümü', 'Bekliyor', 'Onaylı', 'İptal'];
 
@@ -138,7 +139,7 @@ export default function AdminRandevularPage() {
                   </td>
                   <td className="px-5 py-3 text-sm text-slate-400 hidden sm:table-cell">{a.therapist_name || a.therapistName}</td>
                   <td className="px-5 py-3">
-                    <p className="text-sm text-white">{a.selected_day || a.selectedDay || '—'}</p>
+                    <p className="text-sm text-white">{fmtDateTr(a.selected_day || a.selectedDay) || '—'}</p>
                     <p className="text-xs text-slate-500">{a.selected_hour || a.selectedHour || '—'}</p>
                   </td>
                   <td className="px-5 py-3 text-xs text-slate-400 hidden md:table-cell max-w-xs truncate">{a.note || '—'}</td>
