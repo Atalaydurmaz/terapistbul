@@ -59,10 +59,8 @@ export default function TerapistGirisPage() {
         <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-600 rounded-2xl mb-4 shadow-lg">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
+            <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+              <img src="/logo.svg" alt="TerapistBul" className="w-full h-full drop-shadow-md" />
             </div>
             <h1 className="text-2xl font-bold text-slate-800">Terapist Girişi</h1>
             <p className="text-slate-500 text-sm mt-1">TerapistBul Terapist Paneli'ne hoş geldiniz</p>
