@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { fmtDateTr } from '@/lib/date';
@@ -16,7 +16,9 @@ const statusConfig = {
 export default function HesabimPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [tab, setTab] = useState('mesajlar');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'randevular' ? 'randevular' : 'mesajlar';
+  const [tab, setTab] = useState(initialTab);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTherapist, setSelectedTherapist] = useState(null);
