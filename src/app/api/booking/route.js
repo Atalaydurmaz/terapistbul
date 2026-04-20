@@ -86,7 +86,7 @@ export async function POST(req) {
     const supabase = createAdminClient();
     await supabase.from('appointments').insert([{
       name,
-      email,
+      email: email ? email.toLowerCase() : email,
       phone: phone || null,
       note,
       therapist_name: therapistName,

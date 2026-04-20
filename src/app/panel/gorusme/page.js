@@ -40,28 +40,38 @@ function GorusmeIframe() {
   const [notes, setNotes] = useState('');
   const [saved, setSaved] = useState(false);
   const saveTimer = useRef(null);
-  const storageKey = `seans_notu_${appointmentId || 'default'}`;
 
-  // localStorage'dan notları yükle
+  // DB'den seans notlarını yükle
   useEffect(() => {
+    if (!appointmentId) return;
+    fetch('/api/panel/messages')
+      .then((r) => r.json())
+      .then((list) => {
+        const apt = Array.isArray(list) ? list.find((a) => a.id === appointmentId) : null;
+        if (apt?.session_notes) setNotes(apt.session_notes);
+      })
+      .catch(() => {});
+  }, [appointmentId]);
+
+  const persistNotes = async (val) => {
+    if (!appointmentId) return;
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) setNotes(saved);
+      await fetch(`/api/panel/randevular/${appointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_notes: val }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch {}
-  }, [storageKey]);
+  };
 
   // Otomatik kaydet (1 sn debounce)
   const handleNotesChange = (val) => {
     setNotes(val);
     setSaved(false);
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      try {
-        localStorage.setItem(storageKey, val);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      } catch {}
-    }, 1000);
+    saveTimer.current = setTimeout(() => { persistNotes(val); }, 1000);
   };
 
   if (!roomUrl) {
@@ -225,13 +235,7 @@ function GorusmeIframe() {
             <div className="px-4 py-3 border-t border-white/[0.06] flex items-center justify-between">
               <span className="text-slate-600 text-xs">{notes.length} karakter</span>
               <button
-                onClick={() => {
-                  try {
-                    localStorage.setItem(storageKey, notes);
-                    setSaved(true);
-                    setTimeout(() => setSaved(false), 2000);
-                  } catch {}
-                }}
+                onClick={() => persistNotes(notes)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 text-xs font-medium rounded-lg transition-colors border border-teal-500/20"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

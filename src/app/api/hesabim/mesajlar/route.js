@@ -17,7 +17,7 @@ export async function POST(req) {
       .from('appointments')
       .insert([{
         name: session.user.name || '',
-        email: session.user.email,
+        email: session.user.email?.toLowerCase() || '',
         phone: null,
         note: note.trim(),
         therapist_name: therapistName,
@@ -62,7 +62,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('appointments')
       .select('id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, created_at, updated_at, direction')
-      .eq('email', userEmail)
+      .ilike('email', userEmail)
       .order('created_at', { ascending: false });
 
     if (error) {

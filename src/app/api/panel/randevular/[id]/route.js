@@ -44,12 +44,24 @@ export async function PATCH(req, { params }) {
   }
 
   const body = await req.json();
-  const { status, therapist_rating } = body;
+  const { status, therapist_rating, session_notes } = body;
 
   if (therapist_rating !== undefined) {
     const { data, error } = await supabase
       .from('appointments')
       .update({ therapist_rating })
+      .eq('id', id)
+      .select()
+      .maybeSingle();
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (!data) return Response.json({ error: 'Randevu bulunamadı' }, { status: 404 });
+    return Response.json(data);
+  }
+
+  if (session_notes !== undefined) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .update({ session_notes, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .maybeSingle();
