@@ -107,16 +107,13 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
     <>
       <button
         onClick={() => openModal('randevu')}
-        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3.5 rounded-xl transition-colors mb-3"
+        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3.5 rounded-xl transition-colors"
       >
         Randevu Al
       </button>
-      <button
-        onClick={() => openModal('mesaj')}
-        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 rounded-xl transition-colors text-sm"
-      >
-        Mesaj Gönder
-      </button>
+      <p className="text-xs text-slate-400 text-center mt-2">
+        Terapistinizle seans sonrası mesajlaşabilirsiniz.
+      </p>
 
       {showAuthWarning && (
         <div className="mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">

@@ -56,7 +56,7 @@ export async function GET() {
   }
 
   try {
-    const userEmail = session.user.email.toLowerCase();
+    const userEmail = session.user.email.trim().toLowerCase();
     const supabase = createAdminClient();
 
     const { data, error } = await supabase

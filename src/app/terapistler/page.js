@@ -254,7 +254,7 @@ function TerapistlerContent() {
               />
               <div className="flex justify-between text-xs text-slate-400 mt-1">
                 <span>1.000 ₺</span>
-                <span>6.000 ₺</span>
+                <span>10.000 ₺</span>
               </div>
             </div>
 
