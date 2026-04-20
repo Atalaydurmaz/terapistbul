@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { fmtDateTr } from '@/lib/date';
 
@@ -35,6 +35,26 @@ export default function RandevularPage() {
   const [therapistName, setTherapistName] = useState('Terapist');
   const [ratingModal, setRatingModal] = useState(null); // { aptId, hover, selected }
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [notesDraft, setNotesDraft] = useState({}); // { [aptId]: string }
+  const [notesSaved, setNotesSaved] = useState({}); // { [aptId]: boolean }
+  const notesTimers = useRef({});
+
+  const saveNotes = useCallback(async (aptId, val) => {
+    await fetch(`/api/panel/randevular/${aptId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_notes: val }),
+    });
+    setAppointments((prev) => prev.map((a) => a.id === aptId ? { ...a, sessionNotes: val } : a));
+    setNotesSaved((s) => ({ ...s, [aptId]: true }));
+    setTimeout(() => setNotesSaved((s) => ({ ...s, [aptId]: false })), 2000);
+  }, []);
+
+  const handleNotesChange = (aptId, val) => {
+    setNotesDraft((d) => ({ ...d, [aptId]: val }));
+    clearTimeout(notesTimers.current[aptId]);
+    notesTimers.current[aptId] = setTimeout(() => { saveNotes(aptId, val); }, 1000);
+  };
 
   useEffect(() => {
     try {
@@ -326,18 +346,45 @@ export default function RandevularPage() {
                         <p className="font-medium text-slate-700">{statusConfig[apt.status].label}</p>
                       </div>
                     </div>
-                    {apt.sessionNotes && (
-                      <div className="mt-3 p-4 bg-teal-50 border border-teal-100 rounded-xl">
-                        <div className="flex items-center gap-1.5 mb-2">
+                    <div className="mt-3 p-4 bg-teal-50 border border-teal-100 rounded-xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                           </svg>
                           <p className="text-teal-700 text-xs font-semibold uppercase tracking-wide">Seans Notlarım</p>
                         </div>
-                        <p className="text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">{apt.sessionNotes}</p>
+                        {notesSaved[apt.id] && (
+                          <span className="text-green-600 text-xs flex items-center gap-1">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Kaydedildi
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <textarea
+                        value={notesDraft[apt.id] !== undefined ? notesDraft[apt.id] : (apt.sessionNotes || '')}
+                        onChange={(e) => handleNotesChange(apt.id, e.target.value)}
+                        placeholder="Bu seansa dair notlarınızı buraya yazın veya düzenleyin... (otomatik kaydedilir)"
+                        rows={5}
+                        className="w-full bg-white border border-teal-100 rounded-lg px-3 py-2 text-slate-700 text-sm leading-relaxed resize-y outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 placeholder-slate-400"
+                        spellCheck={false}
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-slate-400 text-xs">
+                          {((notesDraft[apt.id] !== undefined ? notesDraft[apt.id] : (apt.sessionNotes || '')).length)} karakter · otomatik kaydedilir
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => saveNotes(apt.id, notesDraft[apt.id] !== undefined ? notesDraft[apt.id] : (apt.sessionNotes || ''))}
+                          className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition-colors"
+                        >
+                          Kaydet
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
