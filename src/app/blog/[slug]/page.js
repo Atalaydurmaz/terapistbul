@@ -299,7 +299,7 @@ export default async function BlogPostPage({ params }) {
             <div className="bg-teal-600 rounded-2xl p-5 text-white text-center">
               <div className="text-3xl mb-2">🧠</div>
               <p className="text-sm font-bold mb-1">Terapist Arıyor musunuz?</p>
-              <p className="text-teal-200 text-xs mb-3">AI eşleştirme ile size özel uzman bulun</p>
+              <p className="text-teal-200 text-xs mb-3">Yapay Zeka eşleştirme ile size özel uzman bulun</p>
               <Link href="/terapistler" className="block bg-white text-teal-700 font-semibold text-xs py-2 rounded-full hover:bg-teal-50 transition-colors">
                 Hemen Bul
               </Link>

@@ -36,7 +36,7 @@ const categories = [
   },
   {
     icon: '🤖',
-    title: 'AI Eşleştirme',
+    title: 'Yapay Zeka Eşleştirme',
     desc: 'Eşleştirme nasıl çalışır, sonuçlar',
     slug: 'ai',
   },
@@ -66,13 +66,13 @@ const faqs = {
   ],
   gizlilik: [
     { q: 'Verilerim güvende mi?', a: 'Tüm veriler SSL şifreleme ile korunur, KVKK\'ya tam uyumlu altyapıda saklanır. Hiçbir kişisel veri üçüncü taraflarla paylaşılmaz.' },
-    { q: 'Arama geçmişim terapistlere görünüyor mu?', a: 'Hayır. AI arama kutusuna yazdığınız metinler yalnızca eşleştirme algoritması tarafından işlenir; hiçbir terapist bu bilgilere erişemez.' },
+    { q: 'Arama geçmişim terapistlere görünüyor mu?', a: 'Hayır. Yapay Zeka arama kutusuna yazdığınız metinler yalnızca eşleştirme algoritması tarafından işlenir; hiçbir terapist bu bilgilere erişemez.' },
     { q: 'İki faktörlü doğrulama var mı?', a: 'Evet, hesap güvenliği için SMS veya e-posta ile iki faktörlü doğrulama aktif edebilirsiniz. Hesap ayarları > Güvenlik bölümünden etkinleştirin.' },
   ],
   ai: [
-    { q: 'AI eşleştirme nasıl çalışır?', a: 'Arama kutusuna nasıl hissettiğinizi yazmanız yeterli. Algoritmamız metindeki duygusal tonu ve anahtar kavramları analiz ederek terapistlerin uzmanlık alanlarıyla eşleştirir ve uyumluluk puanı üretir.' },
-    { q: 'Eşleşme sonuçları kişiselleştirilebilir mi?', a: 'Evet. Şehir, fiyat aralığı, seans modu ve uzmanlık filtrelerini kullanarak AI sıralamasını kendi tercihlerinize göre daraltabilirsiniz.' },
-    { q: 'AI her zaman doğru eşleşmeyi buluyor mu?', a: 'AI en uyumlu adayları öne çıkarır, ancak son karar her zaman sizindir. Profilleri inceleyin, ücretsiz ön görüşme yapın ve en doğal hissettiren terapisti seçin.' },
+    { q: 'Yapay Zeka eşleştirme nasıl çalışır?', a: 'Arama kutusuna nasıl hissettiğinizi yazmanız yeterli. Algoritmamız metindeki duygusal tonu ve anahtar kavramları analiz ederek terapistlerin uzmanlık alanlarıyla eşleştirir ve uyumluluk puanı üretir.' },
+    { q: 'Eşleşme sonuçları kişiselleştirilebilir mi?', a: 'Evet. Şehir, fiyat aralığı, seans modu ve uzmanlık filtrelerini kullanarak Yapay Zeka sıralamasını kendi tercihlerinize göre daraltabilirsiniz.' },
+    { q: 'Yapay Zeka her zaman doğru eşleşmeyi buluyor mu?', a: 'Yapay Zeka en uyumlu adayları öne çıkarır, ancak son karar her zaman sizindir. Profilleri inceleyin, ücretsiz ön görüşme yapın ve en doğal hissettiren terapisti seçin.' },
   ],
 };
 
@@ -133,7 +133,7 @@ export default function DestekPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
 
         {/* Quick contact */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             {
               icon: '✉️',
@@ -148,13 +148,6 @@ export default function DestekPage() {
               value: 'Şu an çevrimiçi',
               sub: 'Pzt–Cum 09:00–18:00',
               href: '#',
-            },
-            {
-              icon: '📞',
-              title: 'Telefon',
-              value: '0850 XXX XX XX',
-              sub: 'Pzt–Cum 09:00–18:00',
-              href: 'tel:08500000000',
             },
           ].map(({ icon, title, value, sub, href }) => (
             <a key={title} href={href}

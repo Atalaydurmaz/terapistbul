@@ -388,7 +388,7 @@ export default function BlogPage() {
                 }`}
               >
                 <span className={aiMode ? 'animate-spin' : 'text-xl'} style={aiMode ? { animationDuration: '3s' } : {}}>✨</span>
-                {aiMode ? 'AI Arama Aktif' : 'AI ile Ara'}
+                {aiMode ? 'Yapay Zeka Arama Aktif' : 'Yapay Zeka ile Ara'}
                 {!aiMode && <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full font-semibold">YENİ</span>}
               </button>
               {aiMode && (
@@ -472,7 +472,7 @@ export default function BlogPage() {
                 <div className="text-5xl mb-4">✨</div>
                 <p className="text-slate-600 font-medium mb-1">Nasıl hissediyorsunuz?</p>
                 <p className="text-slate-400 text-sm max-w-sm mx-auto">
-                  Doğal dilde yazın — AI size en uygun makaleleri bulsun.
+                  Doğal dilde yazın — Yapay Zeka size en uygun makaleleri bulsun.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 mt-5">
                   {['Çok kaygılıyım', 'Uyuyamıyorum', 'Mutsuzum', 'İlişki sorunum var', 'Kendime güvenemiyorum', 'İş stresi'].map((s) => (
@@ -504,7 +504,7 @@ export default function BlogPage() {
                   )}
                 </div>
                 <p className="text-center text-[11px] text-slate-400 mt-6">
-                  AI önerileri bilgi amaçlıdır. Profesyonel destek için terapist bulucu aracımızı kullanın.
+                  Yapay Zeka önerileri bilgi amaçlıdır. Profesyonel destek için terapist bulucu aracımızı kullanın.
                 </p>
               </>
             )}

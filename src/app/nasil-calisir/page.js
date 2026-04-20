@@ -9,7 +9,7 @@ const steps = [
   {
     number: '01',
     title: 'Ne hissettiğinizi anlatın',
-    desc: 'Ana sayfadaki arama kutusuna nasıl hissettğinizi, ne yaşadığınızı yazın. "Son zamanlarda çok kaygılıyım" veya "ilişki sorunları yaşıyorum" gibi kısa bir cümle yeterli.',
+    desc: 'Ana sayfadaki arama kutusuna nasıl hissettiğinizi, ne yaşadığınızı yazın. "Son zamanlarda çok kaygılıyım" veya "ilişki sorunları yaşıyorum" gibi kısa bir cümle yeterli.',
     detail: 'Yapay zekamız yazdığınız metni analiz eder; anahtar kelimeleri, duygusal tonu ve ihtiyaç örüntülerini tespit eder. Herhangi bir form doldurmak ya da kategori seçmek gerekmez.',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -20,7 +20,7 @@ const steps = [
   },
   {
     number: '02',
-    title: 'AI eşleşmeleri inceleyin',
+    title: 'Yapay Zeka eşleşmeleri inceleyin',
     desc: 'Sistemimiz, 100+ doğrulanmış terapist arasından size en uygun adayları uyumluluk puanıyla sıralar.',
     detail: 'Eşleştirme; uzmanlık alanları, terapi yaklaşımı, dil, konum ve müsaitlik takvimi gibi faktörleri bir arada değerlendirir. Her kart üzerinde uyumluluk yüzdesi görürsünüz.',
     icon: (
@@ -100,7 +100,7 @@ export default function NasilCalisirPage() {
             <span className="gradient-text block">hiç bu kadar kolay olmamıştı</span>
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Yapay zeka destekli sistemimiz, nasıl hissettğinizi anlayarak size en uygun uzmanı
+            Yapay zeka destekli sistemimiz, nasıl hissettiğinizi anlayarak size en uygun uzmanı
             dakikalar içinde listeler. Karmaşık formlar yok, uzun bekleme süreleri yok.
           </p>
         </div>

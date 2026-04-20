@@ -143,7 +143,7 @@ export default function KvkkPage() {
           </p>
           <ul className="list-none space-y-2 pl-2">
             <li>
-              <strong>E-posta (KEP):</strong> kvkk@terapistbul.com.tr
+              <strong>E-posta:</strong> destek@terapistibul.com — konu kısmına "KVKK Başvurusu" yazınız
             </li>
             <li>
               <strong>Posta:</strong> Maslak Mahallesi, Büyükdere Cad. No:255, Sarıyer / İstanbul — "KVKK Başvurusu" ibaresiyle

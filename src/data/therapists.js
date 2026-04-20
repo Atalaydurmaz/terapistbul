@@ -218,7 +218,7 @@ export const therapists = [
     price: 3000,
     languages: ['Türkçe'],
     specialties: ['Bireysel Terapi', 'Çift Terapisi', 'Çocuk ve Ergen'],
-    approaches: ['Bilişsel Davranışçı Terapi', 'Çözüms Odaklı Terapi', 'Sistemik Terapi'],
+    approaches: ['Bilişsel Davranışçı Terapi', 'Çözüm Odaklı Terapi', 'Sistemik Terapi'],
     experience: 5.0,
     education: 'Psikoloji Lisans',
     about:

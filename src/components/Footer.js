@@ -46,7 +46,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/terapistler" className="hover:text-teal-400 transition-colors">Terapist Ara</Link></li>
               <li><Link href="/nasil-calisir" className="hover:text-teal-400 transition-colors">Nasıl Çalışır?</Link></li>
-              <li><Link href="/ai-eslestirme" className="hover:text-teal-400 transition-colors">AI Eşleştirme</Link></li>
+              <li><Link href="/ai-eslestirme" className="hover:text-teal-400 transition-colors">Yapay Zeka Eşleştirme</Link></li>
               <li><Link href="/blog" className="hover:text-teal-400 transition-colors">Psikoloji Blogu</Link></li>
               <li><Link href="/sss" className="hover:text-teal-400 transition-colors">Sık Sorulan Sorular</Link></li>
             </ul>
@@ -78,7 +78,7 @@ export default function Footer() {
 
         <div className="border-t border-slate-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500">
-            © 2025 TerapistBul. Tüm hakları saklıdır. Türkiye'de kurulmuş bir şirkettir.
+            © 2026 TerapistBul. Tüm hakları saklıdır. Türkiye'de kurulmuş bir şirkettir.
           </p>
           <p className="text-xs text-slate-500">
             🔒 SSL korumalı · KVKK uyumlu · Verileriniz güvende

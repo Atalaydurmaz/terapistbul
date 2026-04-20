@@ -59,7 +59,7 @@ export default function HomePage() {
               <span className="gradient-text block">terapisti bulun</span>
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed mb-10">
-              Nasıl hissettğinizi bize anlatın. Yapay zekamız, Türkiye&apos;nin dört bir yanındaki
+              Nasıl hissettiğinizi bize anlatın. Yapay zekamız, Türkiye&apos;nin dört bir yanındaki
               uzman psikolog ve terapistler arasından size özel en uygun eşleşmeleri getirir.
             </p>
 
@@ -171,7 +171,7 @@ export default function HomePage() {
                 <HowItWorksStep
                   number="1"
                   title="Kendinizi anlatın"
-                  desc="Nasıl hissettğinizi, ne yaşadığınızı arama kutusuna yazın. Yapay zekamız sizi anlar."
+                  desc="Nasıl hissettiğinizi, ne yaşadığınızı arama kutusuna yazın. Yapay zekamız sizi anlar."
                 />
                 <HowItWorksStep
                   number="2"
@@ -206,7 +206,7 @@ export default function HomePage() {
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                       </svg>
                     </div>
-                    <span className="text-sm font-semibold text-slate-700">AI Eşleştirme Aktif</span>
+                    <span className="text-sm font-semibold text-slate-700">Yapay Zeka Eşleştirme Aktif</span>
                   </div>
                   <div className="h-10 bg-slate-50 rounded-lg flex items-center px-3 text-sm text-slate-400">
                     Son zamanlarda çok kaygılıyım...
@@ -414,7 +414,7 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="text-teal-200 text-xs mt-5">
-            Üyelik tamamen ücretsiz · Kredi kartı gerekmez · 5 dakikada tamamlanır
+            Üyelik tamamen ücretsiz · 5 dakikada tamamlanır
           </p>
         </div>
       </section>

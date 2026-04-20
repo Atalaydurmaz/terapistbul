@@ -23,7 +23,7 @@ function UserAvatar({ session }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-9 h-9 rounded-full bg-teal-600 text-white text-sm font-bold flex items-center justify-center hover:bg-teal-700 transition-colors ring-2 ring-teal-100"
+        className="w-9 h-9 rounded-full bg-teal-600 text-white text-sm font-bold flex items-center justify-center hover:bg-teal-700 hover:ring-teal-300 transition-all ring-2 ring-teal-100 cursor-pointer"
       >
         {initials}
       </button>
@@ -64,7 +64,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-3 sm:px-4 lg:px-5">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export default function Navbar() {
               Psikoloji Blog
             </Link>
             <Link href="/testler" className="flex items-center gap-1.5 text-slate-600 hover:text-teal-600 font-medium text-sm transition-colors">
-              <span className="text-xs bg-teal-100 text-teal-700 font-bold px-1.5 py-0.5 rounded-md">AI</span>
+              <span className="text-[10px] bg-teal-100 text-teal-700 font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap">Yapay Zeka</span>
               Psikolojik Testler
             </Link>
           </div>
@@ -166,7 +166,7 @@ export default function Navbar() {
             Psikoloji Blog
           </Link>
           <Link href="/testler" className="flex items-center gap-2 text-slate-700 font-medium py-2" onClick={() => setMenuOpen(false)}>
-            <span className="text-xs bg-teal-100 text-teal-700 font-bold px-1.5 py-0.5 rounded-md">AI</span>
+            <span className="text-[10px] bg-teal-100 text-teal-700 font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap">Yapay Zeka</span>
             Psikolojik Testler
           </Link>
           <hr className="border-slate-100" />

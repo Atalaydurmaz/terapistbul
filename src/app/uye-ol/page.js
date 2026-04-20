@@ -228,7 +228,7 @@ export default function UyeOlPage() {
           {[
             { icon: '🆓', text: 'Tamamen Ücretsiz' },
             { icon: '⚡', text: '5 Dakikada Tamamla' },
-            { icon: '🤖', text: 'AI Eşleştirme' },
+            { icon: '🤖', text: 'Yapay Zeka Eşleştirme' },
           ].map(({ icon, text }) => (
             <div key={text}>
               <div className="text-xl mb-1">{icon}</div>

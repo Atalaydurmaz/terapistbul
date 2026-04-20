@@ -11,7 +11,7 @@ const categories = [
     questions: [
       {
         q: 'TerapistBul nedir?',
-        a: 'TerapistBul, Türkiye\'nin yapay zeka destekli terapist eşleştirme platformudur. Nasıl hissettğinizi birkaç cümleyle anlatmanız yeterli; sistemimiz 850\'den fazla doğrulanmış psikolog, psikiyatrist ve terapist arasından size en uygun adayları saniyeler içinde listeler.',
+        a: 'TerapistBul, Türkiye\'nin yapay zeka destekli terapist eşleştirme platformudur. Nasıl hissettiğinizi birkaç cümleyle anlatmanız yeterli; sistemimiz 850\'den fazla doğrulanmış psikolog, psikiyatrist ve terapist arasından size en uygun adayları saniyeler içinde listeler.',
       },
       {
         q: 'Terapist arama ve eşleştirme ücretsiz mi?',
@@ -34,7 +34,7 @@ const categories = [
     questions: [
       {
         q: 'Yapay zeka eşleştirmesi nasıl çalışıyor?',
-        a: 'Arama kutusuna nasıl hissettğinizi yazmanız yeterlidir. Yapay zekamız yazdığınız metni analiz ederek anahtar kelimeleri, duygusal tonu ve ihtiyaç örüntülerini tespit eder. Ardından terapistlerin uzmanlık alanları, terapi yaklaşımları, dil bilgisi ve konumuyla karşılaştırarak uyumluluk puanı hesaplar.',
+        a: 'Arama kutusuna nasıl hissettiğinizi yazmanız yeterlidir. Yapay zekamız yazdığınız metni analiz ederek anahtar kelimeleri, duygusal tonu ve ihtiyaç örüntülerini tespit eder. Ardından terapistlerin uzmanlık alanları, terapi yaklaşımları, dil bilgisi ve konumuyla karşılaştırarak uyumluluk puanı hesaplar.',
       },
       {
         q: 'Eşleştirme sonuçlarını beğenmezsem ne yapabilirim?',
@@ -46,7 +46,7 @@ const categories = [
       },
       {
         q: 'Herhangi bir kategori seçmek zorunda mıyım?',
-        a: 'Hayır. Sadece nasıl hissettğinizi doğal bir dille yazmanız yeterli. "Son zamanlarda çok kaygılıyım ve uyuyamıyorum" gibi bir cümle, sistem için yeterli bilgidir.',
+        a: 'Hayır. Sadece nasıl hissettiğinizi doğal bir dille yazmanız yeterli. "Son zamanlarda çok kaygılıyım ve uyuyamıyorum" gibi bir cümle, sistem için yeterli bilgidir.',
       },
     ],
   },

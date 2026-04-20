@@ -42,7 +42,7 @@ export default function GizlilikPage() {
             <li>Ad, soyad, e-posta adresi ve telefon numarası</li>
             <li>Şifre (şifrelenmiş biçimde saklanır)</li>
             <li>Profil bilgileri (terapistler için unvan, eğitim, uzmanlık alanları)</li>
-            <li>Arama sorgularınız (nasıl hissettğinizi anlatan metinler)</li>
+            <li>Arama sorgularınız (nasıl hissettiğinizi anlatan metinler)</li>
             <li>Randevu ve mesajlaşma verileri</li>
           </ul>
           <p><strong>2.2 Otomatik olarak toplanan veriler:</strong></p>

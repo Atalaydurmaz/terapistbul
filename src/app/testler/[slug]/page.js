@@ -67,7 +67,7 @@ export default function TestPage() {
     'Yanıtlarınız işleniyor...',
     'Klinik ölçeklerle karşılaştırılıyor...',
     'Örüntüler analiz ediliyor...',
-    'AI modeli değerlendirme yapıyor...',
+    'Yapay Zeka modeli değerlendirme yapıyor...',
     'Kişiselleştirilmiş rapor hazırlanıyor...',
   ];
 
@@ -176,7 +176,7 @@ export default function TestPage() {
                 {[
                   { label: 'Soru Sayısı', value: `${test.questionCount} soru`, icon: '❓' },
                   { label: 'Tahmini Süre', value: `${test.duration} dakika`, icon: '⏱️' },
-                  { label: 'Analiz Tipi', value: 'AI Destekli', icon: '🤖' },
+                  { label: 'Analiz Tipi', value: 'Yapay Zeka Destekli', icon: '🤖' },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="bg-slate-50 rounded-xl p-3 text-center">
                     <div className="text-xl mb-1">{icon}</div>
@@ -365,7 +365,7 @@ export default function TestPage() {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 mb-5">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">
-                🤖 AI Analizi Tamamlandı
+                🤖 Yapay Zeka Analizi Tamamlandı
               </div>
               <h1 className="text-xl font-bold text-slate-900 mb-1">{test.title} Sonucunuz</h1>
               <p className="text-sm text-slate-400">{test.subtitle}</p>
@@ -411,7 +411,7 @@ export default function TestPage() {
                 <span className="text-white text-sm">🤖</span>
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900">AI Değerlendirmesi</h2>
+                <h2 className="text-base font-bold text-slate-900">Yapay Zeka Değerlendirmesi</h2>
                 <p className="text-xs text-slate-400">TerapistBul Yapay Zeka Motoru</p>
               </div>
             </div>

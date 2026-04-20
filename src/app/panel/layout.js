@@ -90,7 +90,10 @@ export default function PanelLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isLoginPage = pathname === '/panel/giris';
+
   useEffect(() => {
+    if (isLoginPage) return;
     const auth = localStorage.getItem('panel_auth');
     const id = localStorage.getItem('panel_therapist_id');
     if (!auth || !id) {
@@ -152,6 +155,10 @@ export default function PanelLayout({ children }) {
       setUnreadMessages(count);
     }
   }, [pathname]);
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

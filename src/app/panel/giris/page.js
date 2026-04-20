@@ -160,17 +160,6 @@ export default function TerapistGirisPage() {
             </button>
           </form>
 
-          {/* Demo hint */}
-          <div className="mt-6 p-3.5 bg-teal-50 border border-teal-100 rounded-xl space-y-1">
-            <p className="text-xs text-teal-700 text-center font-semibold">Demo — tüm terapistler için şifre: 123456</p>
-            <p className="text-xs text-teal-600 text-center">
-              Statik terapistler: {accounts.slice(0, 2).map((a) => a.email).join(' · ')} · ...
-            </p>
-            <p className="text-xs text-teal-500 text-center">
-              Yeni terapistler: başvuruda kullandığınız e-posta
-            </p>
-          </div>
-
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm text-slate-500 hover:text-teal-600 transition-colors">
               ← Ana sayfaya dön

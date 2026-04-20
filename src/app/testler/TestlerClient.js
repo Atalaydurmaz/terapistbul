@@ -103,7 +103,7 @@ function TestCard({ test }) {
         <div className="flex items-start justify-between mb-3">
           <span className="text-4xl">{test.cover}</span>
           <span className="text-xs bg-teal-50 text-teal-700 border border-teal-100 font-semibold px-2 py-0.5 rounded-full">
-            🤖 AI
+            🤖 Yapay Zeka
           </span>
         </div>
         <h3 className="font-bold text-slate-900 text-sm leading-snug mb-1 group-hover:text-teal-700 transition-colors">

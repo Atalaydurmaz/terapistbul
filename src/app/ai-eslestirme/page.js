@@ -2,8 +2,8 @@ import Link from 'next/link';
 import AISearchBar from '../../components/AISearchBar';
 
 export const metadata = {
-  title: 'AI Eşleştirme | TerapistBul',
-  description: 'Yapay zeka destekli terapist eşleştirme sistemi nasıl çalışır? Nasıl hissettğinizi yazın, saniyeler içinde en uygun terapistlerle eşleşin.',
+  title: 'Yapay Zeka Eşleştirme | TerapistBul',
+  description: 'Yapay zeka destekli terapist eşleştirme sistemi nasıl çalışır? Nasıl hissettiğinizi yazın, saniyeler içinde en uygun terapistlerle eşleşin.',
 };
 
 const howItWorks = [
@@ -17,7 +17,7 @@ const howItWorks = [
     color: 'bg-teal-600',
     light: 'bg-teal-50',
     text: 'text-teal-700',
-    title: 'Nasıl hissettğinizi yazın',
+    title: 'Nasıl hissettiğinizi yazın',
     desc: '"Son zamanlarda çok bunalıyorum", "ilişkimde sorunlar var" veya "panik atak yaşıyorum" gibi kısa bir cümle yeterli. Form yok, kategori seçimi yok.',
   },
   {
@@ -31,7 +31,7 @@ const howItWorks = [
     color: 'bg-violet-600',
     light: 'bg-violet-50',
     text: 'text-violet-700',
-    title: 'AI metni analiz eder',
+    title: 'Yapay Zeka metni analiz eder',
     desc: 'Doğal dil işleme modelimiz yazdığınız metindeki duygusal tonu, anahtar kavramları ve ihtiyaç örüntülerini milisaniyeler içinde tespit eder.',
   },
   {
@@ -106,16 +106,16 @@ const faqs = [
     a: 'Arama kutusuna yazdıklarınız yalnızca eşleştirme algoritması tarafından işlenir. Hiçbir terapist veya üçüncü tarafla paylaşılmaz. Veriler KVKK kapsamında korunur.',
   },
   {
-    q: 'AI her zaman doğru eşleşmeyi buluyor mu?',
-    a: 'AI, istatistiksel olarak en uyumlu adayları öne çıkarır; ancak son karar her zaman sizindir. Profilleri inceleyin, ücretsiz ön görüşme yapın ve size en doğru hissettiren terapisti seçin.',
+    q: 'Yapay Zeka her zaman doğru eşleşmeyi buluyor mu?',
+    a: 'Yapay Zeka, istatistiksel olarak en uyumlu adayları öne çıkarır; ancak son karar her zaman sizindir. Profilleri inceleyin, ücretsiz ön görüşme yapın ve size en doğru hissettiren terapisti seçin.',
   },
   {
     q: 'Eşleştirme kaç saniye sürüyor?',
     a: 'Tipik bir sorgu 0,3-0,8 saniye içinde sonuçlanır. Tüm algoritmik işlem anlık gerçekleşir; sayfa yüklendiğinde eşleşmeler hazırdır.',
   },
   {
-    q: 'Filtreler AI eşleştirmesiyle birlikte çalışıyor mu?',
-    a: 'Evet. Şehir, uzmanlık alanı, ücret aralığı gibi filtreler AI sıralamasının üstüne uygulanır. Hem semantik uyumluluk hem de pratik tercihleriniz bir arada değerlendirilir.',
+    q: 'Filtreler Yapay Zeka eşleştirmesiyle birlikte çalışıyor mu?',
+    a: 'Evet. Şehir, uzmanlık alanı, ücret aralığı gibi filtreler Yapay Zeka sıralamasının üstüne uygulanır. Hem semantik uyumluluk hem de pratik tercihleriniz bir arada değerlendirilir.',
   },
 ];
 
@@ -133,11 +133,11 @@ export default function AIEslestirmePage() {
             Yapay Zeka Destekli
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-5 leading-tight">
-            AI Eşleştirme
+            Yapay Zeka Eşleştirme
             <span className="gradient-text block">nasıl çalışır?</span>
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
-            Nasıl hissettğinizi birkaç kelimeyle anlatmanız yeterli. Algoritmamız 40'tan fazla terapist
+            Nasıl hissettiğinizi birkaç kelimeyle anlatmanız yeterli. Algoritmamız 40'tan fazla terapist
             arasından size en uygun adayları uyumluluk puanıyla saniyeler içinde listeler.
           </p>
           {/* Live search bar */}
@@ -197,7 +197,7 @@ export default function AIEslestirmePage() {
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-slate-800 mb-3">Örnek aramalar</h2>
             <p className="text-slate-500 text-sm">
-              Bu şekilde yazdığınızda AI hangi etiketleri tespit ediyor?
+              Bu şekilde yazdığınızda Yapay Zeka hangi etiketleri tespit ediyor?
             </p>
           </div>
           <div className="space-y-4">

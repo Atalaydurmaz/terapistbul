@@ -4,7 +4,7 @@
     {
       "name": "terapibul-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["run", "dev", "--", "-p", "3654"],
       "port": 3654,
       "autoPort": false
     }

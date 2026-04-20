@@ -57,7 +57,7 @@ export async function POST(req) {
               <p style="margin:0 0 8px;font-weight:600;color:#0d9488;font-size:14px;">Neler yapabilirsiniz?</p>
               <p style="margin:4px 0;color:#0f766e;font-size:13px;">✓ Uzmanlık ve yaklaşıma göre terapist arayın</p>
               <p style="margin:4px 0;color:#0f766e;font-size:13px;">✓ Online veya yüz yüze seans seçin</p>
-              <p style="margin:4px 0;color:#0f766e;font-size:13px;">✓ AI eşleştirme ile size uygun terapisti bulun</p>
+              <p style="margin:4px 0;color:#0f766e;font-size:13px;">✓ Yapay Zeka eşleştirme ile size uygun terapisti bulun</p>
             </div>
             <p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #f1f5f9;padding-top:16px;">
               TerapistBul · Sorularınız için <a href="mailto:${process.env.CONTACT_EMAIL || 'durmazatalay6@gmail.com'}" style="color:#0d9488;">bize ulaşın</a>
