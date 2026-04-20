@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -13,7 +13,7 @@ const statusConfig = {
   iptal:    { label: 'İptal',    bg: 'bg-red-100 text-red-700',      dot: 'bg-red-500'    },
 };
 
-export default function HesabimPage() {
+function HesabimInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -409,5 +409,13 @@ export default function HesabimPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function HesabimPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-500">Yükleniyor...</div>}>
+      <HesabimInner />
+    </Suspense>
   );
 }
