@@ -34,7 +34,7 @@ function TerapistlerContent() {
   );
   const [selectedApproaches, setSelectedApproaches] = useState([]);
   const [onlineOnly, setOnlineOnly] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(6000);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [sortBy, setSortBy] = useState(initialQuery ? 'match' : 'rating');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -130,7 +130,7 @@ function TerapistlerContent() {
     selectedSpecialties.length +
     selectedApproaches.length +
     (onlineOnly ? 1 : 0) +
-    (maxPrice < 6000 ? 1 : 0);
+    (maxPrice < 10000 ? 1 : 0);
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -246,7 +246,7 @@ function TerapistlerContent() {
               <input
                 type="range"
                 min="1000"
-                max="6000"
+                max="10000"
                 step="100"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
