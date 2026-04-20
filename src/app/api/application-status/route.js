@@ -17,7 +17,7 @@ export async function POST(req) {
         <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#f8fafc;padding:32px;border-radius:16px;">
           <div style="text-align:center;margin-bottom:24px;">
             <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <img src="https://terapistbul.com/logo.svg" alt="TerapistBul" width="32" height="32" style="border-radius:50%;" />
+              <img src="https://terapistibul.com/logo.svg" alt="TerapistBul" width="32" height="32" style="border-radius:50%;" />
               <span style="font-size:18px;font-weight:700;color:#0d9488;">TerapistBul</span>
             </div>
           </div>
@@ -34,7 +34,7 @@ export async function POST(req) {
                 ✅ Randevu almaya başlayabilirsiniz
               </p>
             </div>
-            <a href="https://terapistbul.com/panel" style="display:inline-block;background:#0d9488;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">
+            <a href="https://terapistibul.com/panel" style="display:inline-block;background:#0d9488;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">
               Panele Giriş Yap →
             </a>
           </div>
@@ -47,7 +47,7 @@ export async function POST(req) {
         <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#f8fafc;padding:32px;border-radius:16px;">
           <div style="text-align:center;margin-bottom:24px;">
             <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <img src="https://terapistbul.com/logo.svg" alt="TerapistBul" width="32" height="32" style="border-radius:50%;" />
+              <img src="https://terapistibul.com/logo.svg" alt="TerapistBul" width="32" height="32" style="border-radius:50%;" />
               <span style="font-size:18px;font-weight:700;color:#0d9488;">TerapistBul</span>
             </div>
           </div>
@@ -66,7 +66,7 @@ export async function POST(req) {
             <p style="color:#64748b;font-size:13px;margin:0 0 20px;">
               Sorularınız için <a href="mailto:destek@terapistibul.com" style="color:#0d9488;">destek@terapistibul.com</a> adresine ulaşabilirsiniz.
             </p>
-            <a href="https://terapistbul.com/uye-ol" style="display:inline-block;background:#64748b;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">
+            <a href="https://terapistibul.com/uye-ol" style="display:inline-block;background:#64748b;color:#fff;font-weight:600;padding:12px 24px;border-radius:10px;text-decoration:none;font-size:14px;">
               Tekrar Başvur →
             </a>
           </div>

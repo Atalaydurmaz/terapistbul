@@ -28,7 +28,7 @@ export default function KullanimKosullariPage() {
 
         <Section title="1. Taraflar ve Kapsam">
           <p>
-            Bu Kullanım Koşulları, TerapistBul Teknoloji A.Ş. ("TerapistBul") ile <strong>terapistbul.com</strong> web sitesini ve ilgili mobil uygulamaları kullanan gerçek kişiler ("Kullanıcı") arasındaki ilişkiyi düzenler. Platformu kullanmaya devam etmeniz bu koşulları kabul ettiğiniz anlamına gelir.
+            Bu Kullanım Koşulları, TerapistBul Teknoloji A.Ş. ("TerapistBul") ile <strong>terapistibul.com</strong> web sitesini ve ilgili mobil uygulamaları kullanan gerçek kişiler ("Kullanıcı") arasındaki ilişkiyi düzenler. Platformu kullanmaya devam etmeniz bu koşulları kabul ettiğiniz anlamına gelir.
           </p>
         </Section>
 

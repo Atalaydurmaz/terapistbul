@@ -29,7 +29,7 @@ export default function GizlilikPage() {
 
         <Section title="1. Giriş">
           <p>
-            TerapistBul Teknoloji A.Ş. ("TerapistBul", "biz", "şirket") olarak gizliliğinize saygı duyuyor ve kişisel verilerinizi korumayı taahhüt ediyoruz. Bu Gizlilik Politikası, <strong>terapistbul.com</strong> web sitesini ve mobil uygulamalarımızı kullandığınızda hangi verileri topladığımızı, bu verileri nasıl kullandığımızı ve haklarınızın neler olduğunu açıklamaktadır.
+            TerapistBul Teknoloji A.Ş. ("TerapistBul", "biz", "şirket") olarak gizliliğinize saygı duyuyor ve kişisel verilerinizi korumayı taahhüt ediyoruz. Bu Gizlilik Politikası, <strong>terapistibul.com</strong> web sitesini ve mobil uygulamalarımızı kullandığınızda hangi verileri topladığımızı, bu verileri nasıl kullandığımızı ve haklarınızın neler olduğunu açıklamaktadır.
           </p>
           <p>
             Platformumuzu kullanarak bu politikayı okuduğunuzu ve kabul ettiğinizi beyan edersiniz. Bu politikayı kabul etmiyorsanız lütfen platformumuzu kullanmayınız.
