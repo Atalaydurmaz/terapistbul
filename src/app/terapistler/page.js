@@ -27,6 +27,7 @@ function TerapistlerContent() {
   const initialSpecialty = searchParams.get('specialty') || '';
 
   const [baseTherapists, setBaseTherapists] = useState([]);
+  const [loadingTherapists, setLoadingTherapists] = useState(true);
   const [query, setQuery] = useState(initialQuery);
   const [selectedCity, setSelectedCity] = useState('Tümü');
   const [selectedSpecialties, setSelectedSpecialties] = useState(
@@ -44,6 +45,7 @@ function TerapistlerContent() {
       .then((data) => {
         if (!Array.isArray(data) || data.length === 0) {
           setBaseTherapists(staticTherapists);
+          setLoadingTherapists(false);
           return;
         }
         // Supabase verilerini site formatına normalize et
@@ -69,8 +71,12 @@ function TerapistlerContent() {
             };
           });
         setBaseTherapists(normalized);
+        setLoadingTherapists(false);
       })
-      .catch(() => setBaseTherapists(staticTherapists));
+      .catch(() => {
+        setBaseTherapists(staticTherapists);
+        setLoadingTherapists(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -172,7 +178,7 @@ function TerapistlerContent() {
                 </span>
               )}
             </button>
-            <span className="text-sm text-slate-400">{results.length} uzman</span>
+            <span className="text-sm text-slate-400">{loadingTherapists ? 'Yükleniyor...' : `${results.length} uzman`}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -290,7 +296,26 @@ function TerapistlerContent() {
         )}
 
         {/* Results */}
-        {results.length === 0 ? (
+        {loadingTherapists ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-14 h-14 rounded-full bg-slate-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-slate-200 rounded w-3/4" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-3 bg-slate-100 rounded w-full" />
+                  <div className="h-3 bg-slate-100 rounded w-5/6" />
+                </div>
+                <div className="h-9 bg-slate-100 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        ) : results.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🔍</div>
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Sonuç bulunamadı</h3>
