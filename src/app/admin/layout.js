@@ -114,21 +114,24 @@ const pageTitles = {
 };
 
 export default function AdminLayout({ children }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const isAuthRoute = pathname === '/admin/giris';
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const [counts, setCounts] = useState({ terapistler: '…', danisanlar: '…', blog: '…' });
 
   useEffect(() => {
+    if (isAuthRoute) return;
     Promise.all([
       fetch('/api/terapistler-db').then(r => r.json()).catch(() => []),
       fetch('/api/danisanlar').then(r => r.json()).catch(() => []),
     ]).then(([t, d]) => {
       setCounts(prev => ({ ...prev, terapistler: Array.isArray(t) ? t.length : '?', danisanlar: Array.isArray(d) ? d.length : '?' }));
     });
-  }, []);
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  }, [isAuthRoute]);
 
   const pageTitle = pageTitles[pathname] || 'Admin Panel';
 
@@ -221,6 +224,12 @@ export default function AdminLayout({ children }) {
       </div>
     </div>
   );
+
+  // Login sayfası layout kabuğu olmadan render edilmeli — aksi halde
+  // sidebar/header ile üst üste binip tıklamaları engelliyor.
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
