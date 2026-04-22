@@ -175,7 +175,22 @@ export default function ProfilPage() {
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
   const [expandedDate, setExpandedDate] = useState(null);
 
+  // Bugünün geçmiş saatlerini hesapla — terapist geçmiş saate müsait olamasın.
+  // TR saat dilimi için toISOString değil getFullYear/Month/Date kullanıyoruz.
+  const _pNow = new Date();
+  const _pToday = new Date(_pNow); _pToday.setHours(0,0,0,0);
+  const profTodayStr = `${_pToday.getFullYear()}-${String(_pToday.getMonth()+1).padStart(2,'0')}-${String(_pToday.getDate()).padStart(2,'0')}`;
+  const profNowMinutes = _pNow.getHours() * 60 + _pNow.getMinutes();
+  const isPastProfSlot = (day, hour) => {
+    if (!day || !hour || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+    if (day > profTodayStr) return false;
+    if (day < profTodayStr) return true;
+    const [hh, mm] = String(hour).split(':').map(Number);
+    return hh * 60 + mm <= profNowMinutes;
+  };
+
   const toggleHour = (day, hour) => {
+    if (isPastProfSlot(day, hour)) return; // geçmiş saat eklenemez
     setDayHours(prev => {
       const current = prev[day] || [];
       return {
@@ -895,13 +910,18 @@ export default function ProfilPage() {
                               <div className="flex flex-wrap gap-1.5">
                                 {allHours.map(hour => {
                                   const selected = (dayHours[ds] || []).includes(hour);
+                                  const past = isPastProfSlot(ds, hour);
                                   return (
                                     <button
                                       key={hour}
                                       type="button"
+                                      disabled={past}
                                       onClick={() => toggleHour(ds, hour)}
+                                      title={past ? 'Geçmiş saat' : undefined}
                                       className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
-                                        selected
+                                        past
+                                          ? 'bg-slate-50 text-slate-300 border-slate-100 line-through cursor-not-allowed'
+                                          : selected
                                           ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
                                           : 'bg-white text-slate-500 border-slate-200 hover:border-teal-300 hover:text-teal-600'
                                       }`}
