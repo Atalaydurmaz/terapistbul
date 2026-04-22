@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const tabs = ['Site Ayarları', 'SEO', 'E-posta', 'API Entegrasyonları', 'Güvenlik'];
 
@@ -60,12 +60,16 @@ function Toggle({ label, desc, checked, onChange }) {
   );
 }
 
-function SaveButton({ onClick }) {
+function SaveButton({ onClick, saving }) {
   return (
     <div className="mt-6 flex justify-end">
-      <button onClick={onClick} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+      <button
+        onClick={onClick}
+        disabled={saving}
+        className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+      >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        Değişiklikleri Kaydet
+        {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
       </button>
     </div>
   );
@@ -106,9 +110,86 @@ export default function AdminAyarlarPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
 
-  const handleSave = () => {
-    setToast('Ayarlar başarıyla kaydedildi!');
-    setTimeout(() => setToast(''), 3000);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // İlk yüklemede Supabase'ten ayarları çek
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings', { cache: 'no-store' });
+        if (!res.ok) throw new Error('load failed');
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (data.site) {
+          setSiteName(data.site.siteName ?? siteName);
+          setSiteDesc(data.site.siteDesc ?? siteDesc);
+          setContactEmail(data.site.contactEmail ?? contactEmail);
+          setPhone(data.site.phone ?? phone);
+          setAddress(data.site.address ?? address);
+        }
+        if (data.seo) {
+          setTitleTemplate(data.seo.titleTemplate ?? titleTemplate);
+          setRobotsEnabled(data.seo.robotsEnabled ?? robotsEnabled);
+          setSitemapEnabled(data.seo.sitemapEnabled ?? sitemapEnabled);
+          setGaId(data.seo.gaId ?? gaId);
+        }
+        if (data.email) {
+          setSmtpHost(data.email.smtpHost ?? smtpHost);
+          setSmtpPort(data.email.smtpPort ?? smtpPort);
+          setSmtpUser(data.email.smtpUser ?? smtpUser);
+          setFromName(data.email.fromName ?? fromName);
+        }
+        if (data.security) {
+          setSessionTimeout(data.security.sessionTimeout ?? sessionTimeout);
+          setMaxAttempts(data.security.maxAttempts ?? maxAttempts);
+          setIpWhitelist(data.security.ipWhitelist ?? ipWhitelist);
+          setMaintenanceMode(data.security.maintenanceMode ?? maintenanceMode);
+          setTwoFactor(data.security.twoFactor ?? twoFactor);
+        }
+
+        if (data._notMigrated) {
+          setToast('Not: site_settings tablosu henüz yok. SQL dosyasını çalıştırın.');
+          setTimeout(() => setToast(''), 5000);
+        }
+      } catch {
+        // sessizce bırak; default state korunur
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          site: { siteName, siteDesc, contactEmail, phone, address },
+          seo: { titleTemplate, robotsEnabled, sitemapEnabled, gaId },
+          email: { smtpHost, smtpPort, smtpUser, fromName },
+          security: { sessionTimeout, maxAttempts, ipWhitelist, maintenanceMode, twoFactor },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setToast(data.error || 'Kaydedilemedi.');
+      } else {
+        setToast('Ayarlar başarıyla kaydedildi!');
+      }
+    } catch (e) {
+      setToast('Kaydedilemedi: ' + (e?.message || 'bilinmeyen hata'));
+    } finally {
+      setSaving(false);
+      setTimeout(() => setToast(''), 3000);
+    }
   };
 
   const handleTestApi = () => {
@@ -156,7 +237,7 @@ export default function AdminAyarlarPage() {
                 </button>
               </div>
             </div>
-            <SaveButton onClick={handleSave} />
+            <SaveButton onClick={handleSave} saving={saving} />
           </div>
         )}
 
@@ -179,7 +260,7 @@ export default function AdminAyarlarPage() {
               <Toggle label="robots.txt aktif" desc="Arama motorlarına izin ver" checked={robotsEnabled} onChange={setRobotsEnabled} />
               <Toggle label="Sitemap aktif" desc="Otomatik XML sitemap oluştur" checked={sitemapEnabled} onChange={setSitemapEnabled} />
             </div>
-            <SaveButton onClick={handleSave} />
+            <SaveButton onClick={handleSave} saving={saving} />
           </div>
         )}
 
@@ -205,7 +286,7 @@ export default function AdminAyarlarPage() {
                 Test E-postası Gönder
               </button>
             </div>
-            <SaveButton onClick={handleSave} />
+            <SaveButton onClick={handleSave} saving={saving} />
           </div>
         )}
 
@@ -272,7 +353,7 @@ export default function AdminAyarlarPage() {
               />
             </div>
 
-            <SaveButton onClick={handleSave} />
+            <SaveButton onClick={handleSave} saving={saving} />
           </div>
         )}
 
@@ -331,7 +412,7 @@ export default function AdminAyarlarPage() {
               </div>
             )}
 
-            <SaveButton onClick={handleSave} />
+            <SaveButton onClick={handleSave} saving={saving} />
           </div>
         )}
       </div>
