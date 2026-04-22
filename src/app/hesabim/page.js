@@ -419,30 +419,10 @@ function HesabimInner() {
                       {r.status === 'onayli' && (() => {
                         const day = r.selectedDay || r.selected_day;
                         const hour = r.selectedHour || r.selected_hour;
-                        const { canJoin, minutesUntilOpen, isExpired } = getJoinWindow(day, hour, now);
+                        const { canJoin, isExpired } = getJoinWindow(day, hour, now);
                         const sessionId = r.supabaseId || r.id;
                         const isPaid = r.paymentStatus === 'paid';
                         const isRefunded = r.paymentStatus === 'refunded';
-
-                        // Henüz ödeme yapılmamış → "Ödeme Yap" CTA
-                        if (!isPaid && !isRefunded) {
-                          return (
-                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
-                              <Link
-                                href={`/odeme/${sessionId}`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                                  <line x1="1" y1="10" x2="23" y2="10" />
-                                </svg>
-                                Ödeme Yap
-                                {r.price ? <span className="opacity-90">· {r.price.toLocaleString('tr-TR')} ₺</span> : null}
-                              </Link>
-                              <span className="text-xs text-slate-400">Görüşme linki ödeme sonrası aktifleşir.</span>
-                            </div>
-                          );
-                        }
 
                         if (isRefunded) {
                           return (
@@ -454,23 +434,6 @@ function HesabimInner() {
                           );
                         }
 
-                        // Ödeme yapıldı — artık görüşme pencere kontrolü
-                        if (canJoin) {
-                          return (
-                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
-                              <Link
-                                href={`/panel/session/${sessionId}`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                                </svg>
-                                Görüşmeye Katıl
-                              </Link>
-                              <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>
-                            </div>
-                          );
-                        }
                         if (isExpired) {
                           return (
                             <div className="mt-3 pt-3 border-t border-slate-100">
@@ -480,18 +443,37 @@ function HesabimInner() {
                             </div>
                           );
                         }
+
+                        // Onaylı randevu — görüşme linki her zaman aktif (maildeki link gibi).
+                        // Ödeme yapılmadıysa küçük bir "Ödeme Yap" linkini yanında gösteriyoruz,
+                        // ama Görüşmeye Katıl butonunu engellemiyoruz.
                         return (
                           <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl cursor-not-allowed" title="Seansın başlamasına 10 dakika kala aktif olur">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                              </svg>
-                              {minutesUntilOpen > 60
-                                ? `${Math.floor(minutesUntilOpen / 60)} sa ${minutesUntilOpen % 60} dk sonra açılır`
-                                : `${minutesUntilOpen} dk sonra açılır`}
-                            </span>
-                            <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>
+                            {canJoin && (
+                              <Link
+                                href={`/panel/session/${sessionId}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                </svg>
+                                Görüşmeye Katıl
+                              </Link>
+                            )}
+                            {isPaid ? (
+                              <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>
+                            ) : (
+                              <Link
+                                href={`/odeme/${sessionId}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-medium rounded-lg transition-colors"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                  <line x1="1" y1="10" x2="23" y2="10" />
+                                </svg>
+                                Ödeme Yap{r.price ? ` · ${r.price.toLocaleString('tr-TR')} ₺` : ''}
+                              </Link>
+                            )}
                           </div>
                         );
                       })()}
