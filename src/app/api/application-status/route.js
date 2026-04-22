@@ -1,6 +1,4 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getResend } from '@/lib/resend';
 
 export async function POST(req) {
   try {
@@ -81,6 +79,10 @@ export async function POST(req) {
     const adminEmail = process.env.CONTACT_EMAIL || 'durmazatalay6@gmail.com';
     const toEmail = applicantEmail || adminEmail;
 
+    const resend = getResend();
+    if (!resend) {
+      return Response.json({ error: 'Mail servisi yapılandırılmamış.' }, { status: 503 });
+    }
     const result = await resend.emails.send({
       from: 'TerapistBul <onboarding@resend.dev>',
       to: toEmail,

@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export const config = { api: { bodyParser: { sizeLimit: '20mb' } } };
+// Not: App Router'da `export const config = { api: { bodyParser } }`
+// desteklenmiyor. Büyük body'ler için request'i stream edip parse etmek
+// gerekiyor — bu endpoint için şu an gerekmiyor.
 
 export async function GET() {
   const supabase = createAdminClient();

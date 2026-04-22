@@ -1,8 +1,7 @@
-import { Resend } from 'resend';
+import { getResend } from '@/lib/resend';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const USERS_FILE = join(process.cwd(), 'src', 'data', 'registered-users.json');
 
 function getRegisteredEmails() {
@@ -34,7 +33,11 @@ export async function POST(req) {
 
     saveUser(name, email, password);
 
-    // Danışana hoş geldin maili
+    // Danışana hoş geldin maili (Resend yapılandırılmamışsa sessizce atla)
+    const resend = getResend();
+    if (!resend) {
+      return Response.json({ success: true, emailSent: false });
+    }
     await resend.emails.send({
       from: 'TerapistBul <onboarding@resend.dev>',
       to: email,
