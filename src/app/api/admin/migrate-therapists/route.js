@@ -31,7 +31,7 @@ export async function POST() {
   }));
 
   const { data, error } = await supabase.from('therapists').insert(rows).select('id, name');
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Migration failed.' }, { status: 500 }); }
 
   return Response.json({ success: true, migrated: data.length, therapists: data });
 }

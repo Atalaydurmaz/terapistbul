@@ -28,7 +28,7 @@ export async function POST(req) {
       .select()
       .single();
 
-    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (error) { console.error('hesabim POST error:', error); return Response.json({ error: 'Gönderilemedi.' }, { status: 500 }); }
 
     // İstemci eski alan adlarını bekliyor — uyumluluk için map'le
     return Response.json({
@@ -61,7 +61,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('appointments')
-      .select('id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, created_at, updated_at, direction')
+      .select('id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction')
       .ilike('email', userEmail)
       .order('created_at', { ascending: false });
 
@@ -86,6 +86,11 @@ export async function GET() {
       selectedHour: row.selected_hour,
       daily_room_url: row.daily_room_url,
       direction: row.direction,
+      price: row.price,
+      paymentStatus: row.payment_status,
+      transactionId: row.transaction_id,
+      paidAt: row.paid_at,
+      refundedAt: row.refunded_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));

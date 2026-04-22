@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { therapists as staticTherapists } from '@/data/therapists';
 import { signSession, SESSION_COOKIES, sessionCookieOptions } from '@/lib/auth/session';
+import { verifyPassword } from '@/lib/auth/password';
 
 function nameToInitials(name) {
   return (name || '')
@@ -29,18 +30,30 @@ async function buildResponse(payload, body) {
   return res;
 }
 
+// Geçiş dönemi için: terapistin password_hash'i yoksa env'deki
+// PANEL_DEV_PASSWORD ile giriş yapılabilsin. Prod'da bu env UNSET olmalı.
+async function checkPassword(row, password) {
+  if (row?.password_hash) {
+    return verifyPassword(password, row.password_hash);
+  }
+  const dev = process.env.PANEL_DEV_PASSWORD;
+  if (dev && password === dev) return true;
+  return false;
+}
+
 // POST /api/panel/login  { email, password }
 export async function POST(req) {
   const { email, password } = await req.json();
   if (!email || !password) return Response.json({ error: 'Eksik alan' }, { status: 400 });
-  if (password !== '123456') return Response.json({ error: 'Hatalı şifre' }, { status: 401 });
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = String(email).trim().toLowerCase();
 
-  // 1. Static accounts
+  // 1. Static demo accounts (ak@, md@) — parola yok, sadece DEV fallback
   for (const t of staticTherapists) {
     const staticEmail = `${nameToInitials(t.name)}@terapistbul.com`;
     if (staticEmail === normalizedEmail) {
+      const ok = await checkPassword(null, password);
+      if (!ok) return Response.json({ error: 'E-posta veya şifre hatalı.' }, { status: 401 });
       return buildResponse(
         { role: 'therapist', therapistId: t.id, email: normalizedEmail, name: t.name },
         { id: t.id, name: t.name },
@@ -52,22 +65,26 @@ export async function POST(req) {
   const supabase = createAdminClient();
   const { data: dbTherapists } = await supabase
     .from('therapists')
-    .select('id, name, email')
+    .select('id, name, email, password_hash')
     .eq('status', 'aktif');
 
   if (dbTherapists) {
     for (const t of dbTherapists) {
       const initEmail = `${nameToInitials(t.name)}@terapistbul.com`;
-      if (initEmail === normalizedEmail || (t.email && t.email.toLowerCase() === normalizedEmail)) {
-        return buildResponse(
-          { role: 'therapist', therapistId: t.id, email: normalizedEmail, name: t.name },
-          { id: t.id, name: t.name },
-        );
-      }
+      const match =
+        initEmail === normalizedEmail ||
+        (t.email && t.email.toLowerCase() === normalizedEmail);
+      if (!match) continue;
+      const ok = await checkPassword(t, password);
+      if (!ok) return Response.json({ error: 'E-posta veya şifre hatalı.' }, { status: 401 });
+      return buildResponse(
+        { role: 'therapist', therapistId: t.id, email: normalizedEmail, name: t.name },
+        { id: t.id, name: t.name },
+      );
     }
   }
 
-  // 3. Applications tablosundan email eşleş
+  // 3. Applications tablosundan email eşleş (approved)
   const { data: app } = await supabase
     .from('applications')
     .select('name, email')
@@ -78,10 +95,14 @@ export async function POST(req) {
   if (app) {
     const { data: matchedT } = await supabase
       .from('therapists')
-      .select('id, name')
+      .select('id, name, password_hash')
       .ilike('name', `%${app.name.split(' ').slice(-1)[0]}%`)
       .eq('status', 'aktif')
       .maybeSingle();
+
+    const ok = await checkPassword(matchedT || null, password);
+    if (!ok) return Response.json({ error: 'E-posta veya şifre hatalı.' }, { status: 401 });
+
     if (matchedT) {
       return buildResponse(
         { role: 'therapist', therapistId: matchedT.id, email: normalizedEmail, name: matchedT.name },

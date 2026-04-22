@@ -1,17 +1,8 @@
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { createClient } from '@supabase/supabase-js';
-
-function getUsers() {
-  try {
-    return JSON.parse(readFileSync(join(process.cwd(), 'src', 'data', 'registered-users.json'), 'utf8'));
-  } catch {
-    return [];
-  }
-}
+import { verifyPassword } from '@/lib/auth/password';
 
 function getSupabase() {
   return createClient(
@@ -58,15 +49,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
-        const users = getUsers();
-        const user = users.find(
-          (u) => u.email?.toLowerCase() === email?.toLowerCase() && u.password === password
-        );
-        if (user) {
-          return { id: user.email, email: user.email, name: user.name };
+        const email = String(credentials?.email || '').toLowerCase().trim();
+        const password = String(credentials?.password || '');
+        if (!email || !password) return null;
+        try {
+          const supabase = getSupabase();
+          const { data, error } = await supabase
+            .from('clients')
+            .select('id, name, email, password_hash, status')
+            .eq('email', email)
+            .maybeSingle();
+          if (error || !data || !data.password_hash) return null;
+          if (data.status && data.status !== 'aktif') return null;
+          const ok = await verifyPassword(password, data.password_hash);
+          if (!ok) return null;
+          return { id: String(data.id), email: data.email, name: data.name || data.email };
+        } catch (e) {
+          console.error('authorize error:', e);
+          return null;
         }
-        return null;
       },
     }),
   ],

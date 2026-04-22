@@ -26,10 +26,11 @@ export async function POST(req) {
       .update({ client_rating: rating })
       .eq('id', id);
 
-    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (error) { console.error(error); return Response.json({ error: 'Puan kaydedilemedi.' }, { status: 500 }); }
 
     return Response.json({ success: true });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error('puan-ver error:', err);
+    return Response.json({ error: 'Sunucu hatası.' }, { status: 500 });
   }
 }

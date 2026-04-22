@@ -49,7 +49,7 @@ export async function POST(req) {
     return Response.json({ url: data.url, name: data.name });
   } catch (err) {
     console.error('Daily route error:', err);
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: 'Sunucu hatası.' }, { status: 500 });
   }
 }
 
@@ -72,6 +72,6 @@ export async function DELETE(req) {
 
     return Response.json({ deleted: true });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: 'Sunucu hatası.' }, { status: 500 });
   }
 }

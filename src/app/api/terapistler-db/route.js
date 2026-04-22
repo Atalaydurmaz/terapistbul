@@ -11,7 +11,7 @@ export async function GET() {
       .order('created_at', { ascending: false }),
     supabase.from('therapist_profiles').select('panel_id, photo_url, intro_video_url'),
   ]);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
 
   // Build name→profile map using static data as bridge (panel_id → name)
   const nameToProfile = {};
@@ -42,6 +42,6 @@ export async function POST(req) {
     .insert([{ ...body, status: body.status || 'aktif' }])
     .select()
     .single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   return Response.json(data, { status: 201 });
 }

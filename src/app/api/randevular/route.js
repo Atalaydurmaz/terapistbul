@@ -6,7 +6,7 @@ export async function GET() {
     .from('appointments')
     .select('*')
     .order('created_at', { ascending: false });
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   return Response.json(data);
 }
 
@@ -18,6 +18,6 @@ export async function POST(req) {
     .insert([{ ...body, status: body.status || 'bekliyor' }])
     .select()
     .single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   return Response.json(data, { status: 201 });
 }

@@ -14,7 +14,7 @@ export async function GET(req, { params }) {
     .eq('panel_id', id)
     .maybeSingle();
 
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   if (data) return Response.json(data);
 
   // id might be a UUID — look up the therapist name, then find the static panel_id

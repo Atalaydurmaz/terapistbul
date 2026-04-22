@@ -46,7 +46,7 @@ export async function POST(req) {
       if (error.message?.includes('not exist') || error.message?.includes('resource')) {
         return Response.json({ error: 'Supabase "videos" bucket bulunamadı. Dashboard → Storage → New Bucket → "videos" (Public) oluşturun.' }, { status: 500 });
       }
-      return Response.json({ error: error.message }, { status: 500 });
+      return Response.json({ error: 'Yükleme başarısız.' }, { status: 500 });
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -56,6 +56,6 @@ export async function POST(req) {
     return Response.json({ signedUrl: data.signedUrl, publicUrl });
   } catch (err) {
     console.error('Upload route error:', err);
-    return Response.json({ error: 'Sunucu hatası: ' + err.message }, { status: 500 });
+    return Response.json({ error: 'Sunucu hatası.' }, { status: 500 });
   }
 }

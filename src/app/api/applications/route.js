@@ -10,7 +10,10 @@ export async function GET() {
     .from('applications')
     .select('*')
     .order('created_at', { ascending: false });
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('applications GET error:', error);
+    return Response.json({ error: 'Başvurular alınamadı.' }, { status: 500 });
+  }
   return Response.json(data);
 }
 
@@ -42,6 +45,9 @@ export async function POST(req) {
     .insert([row])
     .select()
     .single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('applications POST error:', error);
+    return Response.json({ error: 'Başvuru kaydedilemedi.' }, { status: 500 });
+  }
   return Response.json(data, { status: 201 });
 }

@@ -14,7 +14,7 @@ export async function GET(req) {
     .eq('panel_id', panelId)
     .maybeSingle();
 
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   return Response.json(data || {});
 }
 
@@ -51,7 +51,7 @@ export async function PATCH(req) {
     .select()
     .single();
 
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
 
   // therapists tablosunu da güncelle (site listesinde görünsün)
   const staticT = staticTherapists.find((t) => t.id === panel_id);

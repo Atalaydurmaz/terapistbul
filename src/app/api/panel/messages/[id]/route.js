@@ -12,7 +12,7 @@ export async function DELETE(req, { params }) {
     }
     const supabase = createAdminClient();
     const { error } = await supabase.from('appointments').delete().eq('id', idParam);
-    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (error) { console.error(error); return Response.json({ error: 'Silinemedi.' }, { status: 500 }); }
     return Response.json({ success: true });
   } catch (e) {
     console.error('panel messages DELETE error:', e);

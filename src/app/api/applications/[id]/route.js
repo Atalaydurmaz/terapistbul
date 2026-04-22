@@ -11,7 +11,7 @@ export async function PATCH(req, { params }) {
     .eq('id', id)
     .select()
     .single();
-  if (fetchErr) return Response.json({ error: fetchErr.message }, { status: 500 });
+  if (fetchErr) { console.error(fetchErr); return Response.json({ error: 'Başvuru güncellenemedi.' }, { status: 500 }); }
 
   // If approved, create therapist profile
   if (status === 'onaylandi') {
@@ -47,6 +47,6 @@ export async function DELETE(req, { params }) {
   const supabase = createAdminClient();
   const { id } = await params;
   const { error } = await supabase.from('applications').delete().eq('id', id);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Silme başarısız.' }, { status: 500 }); }
   return Response.json({ success: true });
 }

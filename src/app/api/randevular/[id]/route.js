@@ -17,7 +17,7 @@ export async function PATCH(req, { params }) {
     .eq('id', id)
     .select()
     .maybeSingle();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   if (!data) return Response.json({ error: 'Randevu bulunamadı' }, { status: 404 });
   return Response.json(data);
 }
@@ -29,6 +29,6 @@ export async function DELETE(req, { params }) {
     return Response.json({ error: 'Geçersiz randevu ID' }, { status: 400 });
   }
   const { error } = await supabase.from('appointments').delete().eq('id', id);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) { console.error(error); return Response.json({ error: 'Sunucu hatası.' }, { status: 500 }); }
   return Response.json({ success: true });
 }

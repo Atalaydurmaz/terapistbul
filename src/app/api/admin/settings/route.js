@@ -43,7 +43,8 @@ export async function GET() {
       if (/relation .* does not exist/i.test(error.message || '')) {
         return Response.json({ ...DEFAULTS, updated_at: null, _notMigrated: true });
       }
-      return Response.json({ error: error.message }, { status: 500 });
+      console.error('settings GET error:', error);
+      return Response.json({ error: 'Ayarlar okunamadı.' }, { status: 500 });
     }
 
     // Kayıt yoksa default dön.
@@ -58,7 +59,8 @@ export async function GET() {
       updated_at: data.updated_at,
     });
   } catch (err) {
-    return Response.json({ error: err?.message || 'Ayarlar okunamadı.' }, { status: 500 });
+    console.error('settings GET exception:', err);
+    return Response.json({ error: 'Ayarlar okunamadı.' }, { status: 500 });
   }
 }
 
@@ -88,11 +90,13 @@ export async function PUT(req) {
           { status: 503 }
         );
       }
-      return Response.json({ error: error.message }, { status: 500 });
+      console.error('settings PUT error:', error);
+      return Response.json({ error: 'Ayarlar kaydedilemedi.' }, { status: 500 });
     }
 
     return Response.json({ success: true, ...data });
   } catch (err) {
-    return Response.json({ error: err?.message || 'Ayarlar kaydedilemedi.' }, { status: 500 });
+    console.error('settings PUT exception:', err);
+    return Response.json({ error: 'Ayarlar kaydedilemedi.' }, { status: 500 });
   }
 }

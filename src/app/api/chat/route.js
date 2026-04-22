@@ -1,8 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy init: build zamanında env okuma, sadece ilk istekte client kur.
+let _client = null;
+function getClient() {
+  if (_client) return _client;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+  _client = new Anthropic({ apiKey });
+  return _client;
+}
+
+const FALLBACK_MESSAGE =
+  'Merhaba! Psikoloji Asistanı şu an bakımda. Bu sırada TerapistBul üzerinden ' +
+  'alanında uzman bir terapistle görüşebilirsiniz: https://terapistbul.com/terapistler — ' +
+  'Acil bir durumdaysanız lütfen 182 ALO Psikiyatri Hattı\'nı veya 112\'yi arayın.';
 
 const SYSTEM_PROMPT = `Sen TerapistBul platformunun yapay zeka destekli psikoloji asistanısın. Adın "Psikoloji Asistanı" ya da kısaca "Asistan".
 
@@ -35,6 +46,12 @@ export async function POST(request) {
       return Response.json({ error: 'Geçersiz istek' }, { status: 400 });
     }
 
+    const client = getClient();
+    if (!client) {
+      // API anahtarı yapılandırılmamış — 200 ile düzgün fallback dön, 500 yerine.
+      return Response.json({ message: FALLBACK_MESSAGE, fallback: true });
+    }
+
     const response = await client.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 1024,
@@ -51,11 +68,11 @@ export async function POST(request) {
   } catch (error) {
     console.error('Chat API error:', error?.status, error?.message, error?.error);
     if (error?.status === 401) {
-      return Response.json({ error: 'API anahtarı geçersiz.' }, { status: 401 });
+      return Response.json({ message: FALLBACK_MESSAGE, fallback: true });
     }
     if (error?.status === 400) {
-      return Response.json({ error: 'Mesaj formatı hatası: ' + (error?.message || '') }, { status: 400 });
+      return Response.json({ error: 'Mesaj formatı hatası.' }, { status: 400 });
     }
-    return Response.json({ error: 'Bir hata oluştu, lütfen tekrar deneyin.' }, { status: 500 });
+    return Response.json({ message: FALLBACK_MESSAGE, fallback: true });
   }
 }
