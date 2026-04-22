@@ -10,7 +10,12 @@ export async function POST(req) {
       return Response.json({ error: 'Giriş yapmanız gerekiyor.' }, { status: 401 });
     }
 
-    const { name, email, phone, note, therapistName, therapistEmail, type, selectedDay, selectedHour } = await req.json();
+    const body = await req.json();
+    const { name, phone, note, therapistName, therapistEmail, type, selectedDay, selectedHour } = body;
+    // Always trust the session email over what the form sent — this guarantees
+    // /hesabim can later join the user to their own appointments via `.ilike('email', userEmail)`.
+    const sessionEmail = (session.user?.email || '').trim().toLowerCase();
+    const email = sessionEmail || (body.email ? String(body.email).trim().toLowerCase() : '');
     const isRandevu = type === 'randevu';
 
     const adminSubject = isRandevu
@@ -93,7 +98,7 @@ export async function POST(req) {
     const supabase = createAdminClient();
     await supabase.from('appointments').insert([{
       name,
-      email: email ? email.toLowerCase() : email,
+      email: email || null,
       phone: phone || null,
       note,
       therapist_name: therapistName,

@@ -57,14 +57,53 @@ export async function GET() {
 
   try {
     const userEmail = session.user.email.trim().toLowerCase();
+    const userName = (session.user.name || '').trim();
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
+    const selectCols = 'id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction';
+
+    // 1) Primary match: email (case-insensitive). This is the canonical link.
+    const { data: byEmail, error: emailErr } = await supabase
       .from('appointments')
-      .select('id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction')
+      .select(selectCols)
       .ilike('email', userEmail)
       .order('created_at', { ascending: false });
 
+    if (emailErr) {
+      console.error('hesabim GET error (email):', emailErr);
+      return Response.json([]);
+    }
+
+    // 2) Fallback: rows booked under the same name but where the email was missing
+    //    (e.g. booking form submitted with empty email while user was logged in).
+    //    Without this, confirmed appointments disappear from /hesabim for the user
+    //    who actually booked them. We ONLY match null/empty email rows to avoid
+    //    leaking another user's appointments who happens to share the same name.
+    let byName = [];
+    if (userName) {
+      const { data: nameRows, error: nameErr } = await supabase
+        .from('appointments')
+        .select(selectCols)
+        .ilike('name', userName)
+        .or('email.is.null,email.eq.')
+        .order('created_at', { ascending: false });
+      if (nameErr) {
+        console.error('hesabim GET error (name fallback):', nameErr);
+      } else {
+        byName = nameRows || [];
+      }
+    }
+
+    // Merge + dedupe by id; keep email matches first (more trustworthy)
+    const seen = new Set();
+    const combined = [];
+    for (const row of [...(byEmail || []), ...byName]) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      combined.push(row);
+    }
+    const data = combined;
+    const error = null;
     if (error) {
       console.error('hesabim GET error:', error);
       return Response.json([]);
