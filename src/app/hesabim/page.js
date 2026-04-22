@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { fmtDateTr } from '@/lib/date';
+import { fmtDateTr, getJoinWindow } from '@/lib/date';
 
 const statusConfig = {
   bekliyor: { label: 'Bekliyor', bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
@@ -17,7 +17,11 @@ function HesabimInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'randevular' ? 'randevular' : 'mesajlar';
+  const initialTabParam = searchParams.get('tab');
+  const initialTab =
+    initialTabParam === 'randevular' ? 'randevular'
+    : initialTabParam === 'yolculuk' ? 'yolculuk'
+    : 'mesajlar';
   const [tab, setTab] = useState(initialTab);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +29,14 @@ function HesabimInner() {
   const [search, setSearch] = useState('');
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+  const [insights, setInsights] = useState([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSend = async () => {
     if (!messageText.trim() || !selectedGroup) return;
@@ -78,6 +90,22 @@ function HesabimInner() {
       setLoading(false);
     }
   }, []);
+
+  const loadInsights = useCallback(async () => {
+    setInsightsLoading(true);
+    try {
+      const r = await fetch('/api/hesabim/session-insights');
+      const data = await r.json();
+      setInsights(Array.isArray(data) ? data : []);
+    } catch {
+      setInsights([]);
+    }
+    setInsightsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (status === 'authenticated' && tab === 'yolculuk') loadInsights();
+  }, [status, tab, loadInsights]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -162,6 +190,7 @@ function HesabimInner() {
           {[
             { id: 'mesajlar', label: 'Mesajlarım', count: msgMessages.length },
             { id: 'randevular', label: 'Randevularım', count: randevular.length },
+            { id: 'yolculuk', label: 'Seans Yolculuğum', count: insights.length },
           ].map((t) => (
             <button
               key={t.id}
@@ -387,25 +416,171 @@ function HesabimInner() {
                           </span>
                         </div>
                       </div>
-                      {r.status === 'onayli' && r.daily_room_url && (
-                        <div className="mt-3 pt-3 border-t border-slate-100">
-                          <a
-                            href={`/gorusme?room=${encodeURIComponent(r.daily_room_url)}&terapist=${encodeURIComponent(r.therapistName || '')}&name=${encodeURIComponent(session?.user?.name || 'Danışan')}&id=${r.supabaseId || r.id}`}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                            </svg>
-                            Görüşmeye Katıl
-                          </a>
-                        </div>
-                      )}
+                      {r.status === 'onayli' && (() => {
+                        const day = r.selectedDay || r.selected_day;
+                        const hour = r.selectedHour || r.selected_hour;
+                        const { canJoin, minutesUntilOpen, isExpired } = getJoinWindow(day, hour, now);
+                        const sessionId = r.supabaseId || r.id;
+                        const isPaid = r.paymentStatus === 'paid';
+                        const isRefunded = r.paymentStatus === 'refunded';
+
+                        // Henüz ödeme yapılmamış → "Ödeme Yap" CTA
+                        if (!isPaid && !isRefunded) {
+                          return (
+                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                              <Link
+                                href={`/odeme/${sessionId}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                  <line x1="1" y1="10" x2="23" y2="10" />
+                                </svg>
+                                Ödeme Yap
+                                {r.price ? <span className="opacity-90">· {r.price.toLocaleString('tr-TR')} ₺</span> : null}
+                              </Link>
+                              <span className="text-xs text-slate-400">Görüşme linki ödeme sonrası aktifleşir.</span>
+                            </div>
+                          );
+                        }
+
+                        if (isRefunded) {
+                          return (
+                            <div className="mt-3 pt-3 border-t border-slate-100">
+                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl">
+                                Ödeme iade edildi
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        // Ödeme yapıldı — artık görüşme pencere kontrolü
+                        if (canJoin) {
+                          return (
+                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                              <Link
+                                href={`/panel/session/${sessionId}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                </svg>
+                                Görüşmeye Katıl
+                              </Link>
+                              <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>
+                            </div>
+                          );
+                        }
+                        if (isExpired) {
+                          return (
+                            <div className="mt-3 pt-3 border-t border-slate-100">
+                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl">
+                                Görüşme süresi sona erdi
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl cursor-not-allowed" title="Seansın başlamasına 10 dakika kala aktif olur">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                              </svg>
+                              {minutesUntilOpen > 60
+                                ? `${Math.floor(minutesUntilOpen / 60)} sa ${minutesUntilOpen % 60} dk sonra açılır`
+                                : `${minutesUntilOpen} dk sonra açılır`}
+                            </span>
+                            <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
               })}
             </div>
           )
+        )}
+
+        {/* Seans Yolculuğum tab */}
+        {tab === 'yolculuk' && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-100 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/70 flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
+                    <path d="M12 2l2.39 4.84L20 8l-4 3.9.95 5.55L12 14.77 7.05 17.45 8 11.9 4 8l5.61-1.16L12 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="font-semibold text-slate-800">Seans Yolculuğum</h2>
+                  <p className="text-sm text-slate-600 mt-0.5">
+                    Terapistinizin seanslardan sonra sizinle paylaşmayı uygun gördüğü
+                    destekleyici özetler burada toplanır. Bu özetler sizi cesaretlendirmek
+                    ve iki seans arası küçük adımlar atmanıza yardımcı olmak içindir.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {insightsLoading ? (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm text-center py-16">
+                <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              </div>
+            ) : insights.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm text-center py-16">
+                <div className="text-4xl mb-3">🌱</div>
+                <p className="text-slate-500 text-sm">Henüz paylaşılmış bir seans özeti yok.</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Terapistiniz bir özet paylaştığında burada görünecek.
+                </p>
+              </div>
+            ) : (
+              <div className="relative pl-6 space-y-5">
+                <div className="absolute top-2 bottom-2 left-2 w-px bg-gradient-to-b from-emerald-300 via-teal-200 to-transparent" />
+                {insights.map((ins) => {
+                  const dateStr = ins.selectedDay
+                    ? fmtDateTr(ins.selectedDay)
+                    : ins.sharedAt
+                      ? new Date(ins.sharedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : '';
+                  return (
+                    <div key={ins.id} className="relative">
+                      <div className="absolute -left-[19px] top-2 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+                      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                          <div>
+                            <p className="font-semibold text-slate-800">{ins.therapistName || 'Terapistiniz'}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              {dateStr}{ins.selectedHour ? ` · ${ins.selectedHour}` : ''}
+                            </p>
+                          </div>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 text-xs font-medium">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Paylaşıldı
+                          </span>
+                        </div>
+                        <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                          {ins.clientSummary}
+                        </div>
+                        {ins.sharedAt && (
+                          <p className="text-xs text-slate-400 mt-3">
+                            {new Date(ins.sharedAt).toLocaleDateString('tr-TR', {
+                              day: 'numeric', month: 'long', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit',
+                            })} tarihinde paylaşıldı
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
