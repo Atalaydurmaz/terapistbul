@@ -8,6 +8,10 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // iyzipay dinamik require ile Iyzipay.js içinde resources/*.js dosyalarını yüklüyor —
+  // Turbopack bunu bundle edemiyor. Server external olarak işaretleyip runtime'da
+  // doğrudan require edilmesini sağlıyoruz.
+  serverExternalPackages: ['iyzipay'],
   experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
