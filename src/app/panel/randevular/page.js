@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
-import { fmtDateTr } from '@/lib/date';
+import { fmtDateTr, getJoinWindow } from '@/lib/date';
+import Link from 'next/link';
 
 const colors = [
   'bg-blue-100 text-blue-700',
@@ -38,6 +39,13 @@ export default function RandevularPage() {
   const [notesDraft, setNotesDraft] = useState({}); // { [aptId]: string }
   const [notesSaved, setNotesSaved] = useState({}); // { [aptId]: boolean }
   const notesTimers = useRef({});
+  const [now, setNow] = useState(() => new Date());
+  const [aiModal, setAiModal] = useState(null); // { apt, rawText, aiText, status, loading, error }
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const saveNotes = useCallback(async (aptId, val) => {
     await fetch(`/api/panel/randevular/${aptId}`, {
@@ -249,40 +257,81 @@ export default function RandevularPage() {
                         </button>
                       </>
                     )}
-                    {apt.status === 'onayli' && (
-                      <>
-                        {apt.dailyRoomUrl && (
-                          <a
-                            href={`/panel/gorusme?room=${encodeURIComponent(apt.dailyRoomUrl)}&name=${encodeURIComponent(apt.name)}&terapist=${encodeURIComponent(therapistName)}&id=${apt.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 bg-teal-600 text-white hover:bg-teal-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                    {apt.status === 'onayli' && (() => {
+                      const { canJoin, minutesUntilOpen, isExpired, start } = getJoinWindow(apt.selectedDay, apt.time, now);
+                      // Show "Seansı Tamamla" only after the session has started —
+                      // therapist shouldn't be able to mark it completed before the
+                      // appointment time actually arrives. canJoin begins 10 min
+                      // before start; we gate on the real start time.
+                      const sessionStarted = !!(start && now.getTime() >= start.getTime());
+                      return (
+                        <>
+                          {canJoin && (
+                            <Link
+                              href={`/panel/session/${apt.id}`}
+                              className="px-3 py-1.5 bg-teal-600 text-white hover:bg-teal-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                              </svg>
+                              Görüşmeyi Başlat
+                            </Link>
+                          )}
+                          {!canJoin && isExpired && (
+                            <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium flex items-center gap-1">
+                              Süresi Doldu
+                            </span>
+                          )}
+                          {!canJoin && !isExpired && (
+                            <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium flex items-center gap-1 cursor-not-allowed" title="Seansın başlamasına 10 dk kala aktif olur">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                              </svg>
+                              {minutesUntilOpen > 60
+                                ? `${Math.floor(minutesUntilOpen / 60)} sa ${minutesUntilOpen % 60} dk`
+                                : `${minutesUntilOpen} dk`}
+                            </span>
+                          )}
+                          {sessionStarted && (
+                            <button
+                              onClick={() => updateStatus(apt.id, 'tamamlandi')}
+                              className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                              Seansı Tamamla
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleCancel(apt.id)}
+                            className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
                           >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                            </svg>
-                            Görüşmeyi Başlat
-                          </a>
-                        )}
-                        <button
-                          onClick={() => updateStatus(apt.id, 'tamamlandi')}
-                          className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        >
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                          Seansı Tamamla
-                        </button>
-                        <button
-                          onClick={() => handleCancel(apt.id)}
-                          className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors"
-                        >
-                          İptal Et
-                        </button>
-                      </>
-                    )}
+                            İptal Et
+                          </button>
+                        </>
+                      );
+                    })()}
                     {apt.status === 'tamamlandi' && (
                       <>
+                        <button
+                          onClick={() => setAiModal({
+                            apt,
+                            rawText: apt.sessionNotes || '',
+                            aiText: '',
+                            status: 'idle',
+                            error: '',
+                            noteId: null,
+                          })}
+                          className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                          title="Yapay zeka ile SOAP formatında özet oluştur"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
+                          AI Özet
+                        </button>
                         {apt.therapistRating ? (
                           <div className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
                             {[1,2,3,4,5].map((s) => (
@@ -440,6 +489,267 @@ export default function RandevularPage() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* AI Özet Modal */}
+      {aiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-800">AI Seans Özeti</h3>
+                <p className="text-xs text-slate-400">{aiModal.apt.name} · Klinik (SOAP) + Danışan Özeti</p>
+              </div>
+              <button
+                onClick={() => setAiModal(null)}
+                className="text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-900">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <div>
+                  <p className="font-semibold">Gizlilik</p>
+                  <p className="text-blue-800/90 leading-relaxed">
+                    İsimler, e-posta, telefon ve TCKN gibi kişisel veriler AI'ya gönderilmeden önce
+                    otomatik olarak maskelenir. Çıktı sadece size görünür.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                  Hızlı Notlarınız / Transkript
+                </label>
+                <textarea
+                  value={aiModal.rawText}
+                  onChange={(e) => setAiModal((m) => ({ ...m, rawText: e.target.value }))}
+                  rows={6}
+                  placeholder="Seansa dair hızlı notlarınızı veya transkript parçalarını buraya yapıştırın..."
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 leading-relaxed resize-y outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                  spellCheck={false}
+                />
+                <p className="text-xs text-slate-400 mt-1">{aiModal.rawText.length} karakter (maks 12000)</p>
+              </div>
+
+              {aiModal.error && (
+                <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-red-700 text-xs">
+                  {aiModal.error}
+                </div>
+              )}
+
+              {aiModal.aiText && (
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-700 px-2 py-0.5 text-[10px]">
+                      SADECE TERAPİST
+                    </span>
+                    Klinik SOAP Notu (danışanla paylaşılmaz)
+                  </label>
+                  <textarea
+                    value={aiModal.aiText}
+                    onChange={(e) => setAiModal((m) => ({ ...m, aiText: e.target.value }))}
+                    rows={12}
+                    className="w-full bg-white border border-violet-200 rounded-xl px-3 py-2 text-sm text-slate-700 leading-relaxed resize-y outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 font-mono"
+                    spellCheck={false}
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Klinik dille, sadece dosyanızda saklanır. Bu alan hiçbir zaman danışana gönderilmez.
+                  </p>
+                </div>
+              )}
+
+              {aiModal.aiText && (
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px]">
+                      DANIŞANA GÖSTERİLECEK
+                    </span>
+                    Danışan Özeti (onayınızdan sonra paylaşılır)
+                  </label>
+                  <textarea
+                    value={aiModal.clientText || ''}
+                    onChange={(e) => setAiModal((m) => ({ ...m, clientText: e.target.value }))}
+                    rows={10}
+                    placeholder="Destekleyici, cesaretlendirici dil. Ev ödevi ve küçük adımlar..."
+                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-sm text-slate-700 leading-relaxed resize-y outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                    spellCheck={false}
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Gözden geçirip düzenleyebilirsiniz. "Danışanla Paylaş" butonu ile danışanın
+                    "Seans Yolculuğum" sayfasında görünür hale gelir.
+                  </p>
+                  {aiModal.shared && (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2.5 py-1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      Danışanla paylaşıldı
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
+              <button
+                onClick={() => setAiModal(null)}
+                className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl transition-colors"
+              >
+                Kapat
+              </button>
+              {!aiModal.aiText ? (
+                <button
+                  onClick={async () => {
+                    if (aiModal.rawText.trim().length < 10) {
+                      setAiModal((m) => ({ ...m, error: 'En az 10 karakter not girin' }));
+                      return;
+                    }
+                    setAiModal((m) => ({ ...m, status: 'loading', error: '' }));
+                    try {
+                      const res = await fetch('/api/panel/ai-summarize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          appointmentId: aiModal.apt.id,
+                          raw_text: aiModal.rawText,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || 'AI özeti alınamadı');
+                      setAiModal((m) => ({
+                        ...m,
+                        aiText: data.ai_summary,
+                        clientText: data.client_summary || '',
+                        noteId: data.noteId,
+                        status: 'ready',
+                      }));
+                    } catch (e) {
+                      setAiModal((m) => ({ ...m, status: 'idle', error: e.message }));
+                    }
+                  }}
+                  disabled={aiModal.status === 'loading'}
+                  className="px-4 py-2 text-sm text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 disabled:opacity-60 rounded-xl font-medium transition-colors flex items-center gap-2"
+                >
+                  {aiModal.status === 'loading' ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      AI Çalışıyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                      </svg>
+                      Özeti Oluştur
+                    </>
+                  )}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetch(`/api/panel/session-notes/${aiModal.apt.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            noteId: aiModal.noteId,
+                            raw_text: aiModal.rawText,
+                            ai_summary: aiModal.aiText,
+                            client_summary: aiModal.clientText || '',
+                            status: 'draft',
+                          }),
+                        });
+                        // randevuya da kısa özeti ana not olarak yaz (sadece SOAP)
+                        await saveNotes(aiModal.apt.id, aiModal.aiText);
+                        setAiModal(null);
+                      } catch (e) {
+                        setAiModal((m) => ({ ...m, error: e.message }));
+                      }
+                    }}
+                    className="px-4 py-2 text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl font-medium transition-colors"
+                  >
+                    Taslak Kaydet
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetch(`/api/panel/session-notes/${aiModal.apt.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            noteId: aiModal.noteId,
+                            raw_text: aiModal.rawText,
+                            ai_summary: aiModal.aiText,
+                            client_summary: aiModal.clientText || '',
+                            status: 'final',
+                          }),
+                        });
+                        await saveNotes(aiModal.apt.id, aiModal.aiText);
+                        setAiModal(null);
+                      } catch (e) {
+                        setAiModal((m) => ({ ...m, error: e.message }));
+                      }
+                    }}
+                    className="px-4 py-2 text-sm text-white bg-teal-600 hover:bg-teal-700 rounded-xl font-medium transition-colors"
+                  >
+                    Final Olarak Kaydet
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!(aiModal.clientText || '').trim()) {
+                        setAiModal((m) => ({ ...m, error: 'Danışan özeti boş — önce içeriği doldurun.' }));
+                        return;
+                      }
+                      try {
+                        await fetch(`/api/panel/session-notes/${aiModal.apt.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            noteId: aiModal.noteId,
+                            raw_text: aiModal.rawText,
+                            ai_summary: aiModal.aiText,
+                            client_summary: aiModal.clientText,
+                            shared_with_client: true,
+                            status: 'final',
+                          }),
+                        });
+                        setAiModal((m) => ({ ...m, shared: true, error: '' }));
+                      } catch (e) {
+                        setAiModal((m) => ({ ...m, error: e.message }));
+                      }
+                    }}
+                    className="px-4 py-2 text-sm text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl font-medium transition-colors flex items-center gap-2"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Danışanla Paylaş
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
