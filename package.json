@@ -3,15 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3654",
     "build": "next build",
     "start": "next start -p 3654",
     "lint": "eslint"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@daily-co/daily-js": "^0.89.1",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "iyzipay": "^2.0.67",
     "next": "16.2.2",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.4",
