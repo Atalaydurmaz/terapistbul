@@ -4,11 +4,17 @@ import SpecialtySlider from '../components/SpecialtySlider';
 import TherapistCarousel from '../components/TherapistCarousel';
 import { therapists } from '../data/therapists';
 
-function StatCard({ value, label }) {
+function StatCard({ value, label, icon }) {
   return (
     <div className="text-center">
-      <p className="text-3xl font-bold text-teal-700">{value}</p>
-      <p className="text-sm text-slate-500 mt-1">{label}</p>
+      {icon ? (
+        <div className="w-12 h-12 mx-auto rounded-full bg-teal-50 flex items-center justify-center text-teal-600 mb-2">
+          {icon}
+        </div>
+      ) : (
+        <p className="text-3xl font-bold text-teal-700">{value}</p>
+      )}
+      <p className={`text-sm text-slate-600 ${icon ? 'font-semibold' : 'mt-1'}`}>{label}</p>
     </div>
   );
 }
@@ -72,10 +78,42 @@ export default function HomePage() {
       <section className="border-y border-slate-100 bg-white py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
-            <StatCard value="100+" label="Uzman Terapist" />
-            <StatCard value="1,000+" label="Mutlu Danışan" />
-            <StatCard value="81" label="İlde Hizmet" />
-            <StatCard value="94%" label="Memnuniyet Oranı" />
+            <StatCard
+              label="Seçilmiş Uzman Kadro"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="Güvenli Terapi Altyapısı"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="81 İlden Online Erişim"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="KVKK Uyumlu & Şifreli Görüşme"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              }
+            />
           </div>
         </div>
       </section>
@@ -375,7 +413,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-6 text-center">
               {[
-                { value: '43+', label: 'Onaylı Terapist' },
+                { value: 'Seçilmiş', label: 'Uzman Kadro' },
                 { value: '3 Aşama', label: 'Doğrulama Süreci' },
                 { value: '48 saat', label: 'Ortalama İnceleme' },
               ].map(({ value, label }) => (

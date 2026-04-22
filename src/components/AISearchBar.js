@@ -52,16 +52,17 @@ export default function AISearchBar({ initialValue = '' }) {
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           onKeyDown={handleKeyDown}
-          placeholder="Ne hissediyorsunuz? Bize anlatın..."
-          className="w-full pl-14 pr-32 py-4 bg-transparent text-slate-800 placeholder:text-slate-400 text-base focus:outline-none rounded-2xl"
+          placeholder="Ne hissediyorsunuz?"
+          className="w-full pl-12 pr-16 sm:pl-14 sm:pr-32 py-3.5 sm:py-4 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm sm:text-base focus:outline-none rounded-2xl"
         />
 
         <button
           onClick={() => handleSearch()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
+          aria-label="Eşleştir"
+          className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white p-2 sm:px-5 sm:py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center gap-2"
         >
-          <span>Eşleştir</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <span className="hidden sm:inline">Eşleştir</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
@@ -87,16 +88,16 @@ export default function AISearchBar({ initialValue = '' }) {
       )}
 
       {/* Trust line */}
-      <p className="text-center text-xs text-slate-400 mt-3 flex items-center justify-center gap-3">
+      <p className="text-center text-[11px] sm:text-xs text-slate-400 mt-3 flex items-center justify-center flex-wrap gap-x-2 sm:gap-x-3 gap-y-1">
         <span className="flex items-center gap-1">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
           Gizlilik korumalı
         </span>
-        <span>·</span>
-        <span>1,000+ aktif üye</span>
-        <span>·</span>
+        <span className="hidden sm:inline">·</span>
+        <span>Seçilmiş uzman kadro</span>
+        <span className="hidden sm:inline">·</span>
         <span>Türkiye geneli</span>
       </p>
     </div>

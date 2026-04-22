@@ -4,7 +4,11 @@ import { therapists as staticTherapists } from '@/data/therapists';
 export async function GET() {
   const supabase = createAdminClient();
   const [{ data, error }, { data: profiles }] = await Promise.all([
-    supabase.from('therapists').select('*').order('created_at', { ascending: false }),
+    supabase
+      .from('therapists')
+      .select('*')
+      .neq('status', 'pasif')
+      .order('created_at', { ascending: false }),
     supabase.from('therapist_profiles').select('panel_id, photo_url, intro_video_url'),
   ]);
   if (error) return Response.json({ error: error.message }, { status: 500 });

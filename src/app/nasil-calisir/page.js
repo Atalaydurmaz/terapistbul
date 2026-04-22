@@ -21,7 +21,7 @@ const steps = [
   {
     number: '02',
     title: 'Yapay Zeka eşleşmeleri inceleyin',
-    desc: 'Sistemimiz, 100+ doğrulanmış terapist arasından size en uygun adayları uyumluluk puanıyla sıralar.',
+    desc: 'Sistemimiz, özenle seçilmiş doğrulanmış uzman kadrodan size en uygun adayları uyumluluk puanıyla sıralar.',
     detail: 'Eşleştirme; uzmanlık alanları, terapi yaklaşımı, dil, konum ve müsaitlik takvimi gibi faktörleri bir arada değerlendirir. Her kart üzerinde uyumluluk yüzdesi görürsünüz.',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

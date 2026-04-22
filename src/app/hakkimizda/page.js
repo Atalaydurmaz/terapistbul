@@ -75,13 +75,13 @@ export default function HakkimizdaPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: '100+', label: 'Aktif Terapist' },
-                { value: '1000+', label: 'Mutlu Danışan' },
-                { value: '81', label: 'İlde Hizmet' },
+                { value: 'Seçilmiş', label: 'Uzman Kadro' },
+                { value: 'Güvenli', label: 'Terapi Altyapısı' },
+                { value: '81 İl', label: 'Online Erişim' },
                 { value: '2026', label: 'Kuruluş Yılı' },
               ].map(({ value, label }) => (
                 <div key={label} className="bg-teal-50 rounded-2xl p-6 text-center border border-teal-100">
-                  <p className="text-3xl font-bold text-teal-700">{value}</p>
+                  <p className="text-2xl font-bold text-teal-700">{value}</p>
                   <p className="text-sm text-slate-600 mt-1">{label}</p>
                 </div>
               ))}
