@@ -1,9 +1,7 @@
-import { Resend } from 'resend';
+import { getResend } from '@/lib/resend';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { auth } from '@/auth';
 import { fmtDateTr } from '@/lib/date';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
   try {
@@ -43,13 +41,20 @@ export async function POST(req) {
       adminRecipients.push(therapistEmail);
     }
 
-    await resend.emails.send({
-      from: 'TerapistBul <onboarding@resend.dev>',
-      to: adminRecipients,
-      replyTo: email,
-      subject: adminSubject,
-      html: adminHtml,
-    });
+    const resend = getResend();
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: 'TerapistBul <onboarding@resend.dev>',
+          to: adminRecipients,
+          replyTo: email,
+          subject: adminSubject,
+          html: adminHtml,
+        });
+      } catch (e) {
+        console.error('Admin booking e-postası gönderilemedi:', e);
+      }
+    }
 
     // 2) Danışana ayrı onay e-postası — talep alındı bildirimi
     if (email) {
@@ -71,15 +76,17 @@ export async function POST(req) {
         </div>
       `;
 
-      try {
-        await resend.emails.send({
-          from: 'TerapistBul <onboarding@resend.dev>',
-          to: [email],
-          subject: clientSubject,
-          html: clientHtml,
-        });
-      } catch (e) {
-        console.error('Danışan e-postası gönderilemedi:', e);
+      if (resend) {
+        try {
+          await resend.emails.send({
+            from: 'TerapistBul <onboarding@resend.dev>',
+            to: [email],
+            subject: clientSubject,
+            html: clientHtml,
+          });
+        } catch (e) {
+          console.error('Danışan e-postası gönderilemedi:', e);
+        }
       }
     }
 

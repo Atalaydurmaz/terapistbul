@@ -1,8 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Resend } from 'resend';
+import { getResend } from '@/lib/resend';
 import { fmtDateTr } from '@/lib/date';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const DAILY_API = 'https://api.daily.co/v1';
 const DAILY_KEY = process.env.DAILY_API_KEY;
 const DAILY_DOMAIN = process.env.DAILY_DOMAIN || 'terapistbul';
@@ -113,19 +112,22 @@ export async function PATCH(req, { params }) {
         recipients.push(process.env.CONTACT_EMAIL);
       }
 
-      await resend.emails.send({
-        from: 'TerapistBul <onboarding@resend.dev>',
-        to: recipients,
-        subject: `✅ Randevunuz Onaylandı — ${data.therapist_name}`,
-        html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
-          <h2 style="color:#0d9488;">✅ Randevunuz Onaylandı</h2>
-          <p>Sayın <strong>${data.name}</strong>,</p>
-          <p><strong>${data.therapist_name}</strong> ile randevunuz onaylandı.</p>
-          <p>📅 <strong>${data.selected_day ? fmtDateTr(data.selected_day) : '—'}</strong> saat <strong>${data.selected_hour || '—'}</strong></p>
-          ${videoLink}
-          <p style="color:#64748b;font-size:13px;">Görüşme saatinde linke tıklayarak odaya girebilirsiniz.</p>
-        </div>`,
-      });
+      const resend = getResend();
+      if (resend) {
+        await resend.emails.send({
+          from: 'TerapistBul <onboarding@resend.dev>',
+          to: recipients,
+          subject: `✅ Randevunuz Onaylandı — ${data.therapist_name}`,
+          html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
+            <h2 style="color:#0d9488;">✅ Randevunuz Onaylandı</h2>
+            <p>Sayın <strong>${data.name}</strong>,</p>
+            <p><strong>${data.therapist_name}</strong> ile randevunuz onaylandı.</p>
+            <p>📅 <strong>${data.selected_day ? fmtDateTr(data.selected_day) : '—'}</strong> saat <strong>${data.selected_hour || '—'}</strong></p>
+            ${videoLink}
+            <p style="color:#64748b;font-size:13px;">Görüşme saatinde linke tıklayarak odaya girebilirsiniz.</p>
+          </div>`,
+        });
+      }
     } catch (e) { console.error('Email error:', e); }
   }
 

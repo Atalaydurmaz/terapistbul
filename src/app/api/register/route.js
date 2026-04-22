@@ -1,10 +1,12 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getResend } from '@/lib/resend';
 
 export async function POST(req) {
   try {
     const form = await req.json();
+    const resend = getResend();
+    if (!resend) {
+      return Response.json({ error: 'Mail servisi yapılandırılmamış.' }, { status: 503 });
+    }
 
     // 1) Admin bildirimi
     await resend.emails.send({
