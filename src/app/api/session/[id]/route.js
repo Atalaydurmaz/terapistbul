@@ -3,8 +3,68 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { verifySession, SESSION_COOKIES } from '@/lib/auth/session';
 import { auth } from '@/auth';
 
+const DAILY_API = 'https://api.daily.co/v1';
+const DAILY_KEY = process.env.DAILY_API_KEY;
+
 function isValidUuid(value) {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+// Lazy-create a Daily.co room for an appointment that was approved but never
+// got one (e.g. DAILY_API_KEY was unset at approval time, or the call errored
+// and was swallowed). Idempotent: if another request races and a URL is
+// already stored, we return whatever's there on the next read.
+async function ensureDailyRoom(supabase, apt) {
+  if (apt.daily_room_url) return apt.daily_room_url;
+  if (!DAILY_KEY) return null;
+  try {
+    const roomName = `seans-${String(apt.id).replace(/-/g, '').slice(0, 12)}`;
+    // Give the room a generous expiry so legacy rows with stale selected_day
+    // values don't get a room that's already past-due. 7 days from now.
+    const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 3600;
+    const res = await fetch(`${DAILY_API}/rooms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DAILY_KEY}` },
+      body: JSON.stringify({
+        name: roomName,
+        privacy: 'public',
+        properties: {
+          max_participants: 2,
+          enable_chat: true,
+          enable_screenshare: false,
+          lang: 'tr',
+          exp,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      // "already-exists" → fetch the existing one
+      if (data?.info?.includes('already exists') || data?.error === 'invalid-request-error') {
+        const getRes = await fetch(`${DAILY_API}/rooms/${roomName}`, {
+          headers: { Authorization: `Bearer ${DAILY_KEY}` },
+        });
+        const existing = await getRes.json();
+        if (getRes.ok && existing.url) {
+          await supabase
+            .from('appointments')
+            .update({ daily_room_url: existing.url, daily_room_name: existing.name })
+            .eq('id', apt.id);
+          return existing.url;
+        }
+      }
+      console.error('ensureDailyRoom create error:', data);
+      return null;
+    }
+    await supabase
+      .from('appointments')
+      .update({ daily_room_url: data.url, daily_room_name: data.name })
+      .eq('id', apt.id);
+    return data.url;
+  } catch (e) {
+    console.error('ensureDailyRoom fatal:', e);
+    return null;
+  }
 }
 
 /**
@@ -76,13 +136,21 @@ export async function GET(req, { params }) {
   if (!apt) return Response.json({ error: 'Randevu bulunamadı' }, { status: 404 });
   if (!canViewAppointment(viewer, apt)) return Response.json({ error: 'Erişim reddedildi' }, { status: 403 });
 
+  // Only provision a Daily room once the appointment is approved. Clients
+  // shouldn't be able to trigger room creation on a bekliyor/iptal row.
+  let roomUrl = apt.daily_room_url;
+  if (!roomUrl && apt.status === 'onayli') {
+    const supabase = createAdminClient();
+    roomUrl = await ensureDailyRoom(supabase, apt);
+  }
+
   return Response.json({
     id: apt.id,
     clientName: apt.name,
     therapistName: apt.therapist_name,
     selectedDay: apt.selected_day,
     selectedHour: apt.selected_hour,
-    roomUrl: apt.daily_room_url,
+    roomUrl,
     status: apt.status,
     viewerRole: viewer.role,
   });

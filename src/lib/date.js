@@ -35,18 +35,26 @@ export function parseSessionStart(selectedDay, selectedHour) {
 
 /**
  * Session join window logic.
- *   - opens 10 minutes before the start time
- *   - closes 90 minutes after the start time
+ *   - opens as soon as the appointment is approved (no pre-session delay)
+ *   - closes 90 minutes after the scheduled start
+ *   - if no start (instant booking / missing data), treated as always joinable
+ *
+ * Earlier versions only opened the window 10 minutes before start, which made
+ * the Görüşmeyi Başlat / Görüşmeye Katıl buttons invisible during testing and
+ * for back-to-back sessions scheduled far in advance. The start-time check is
+ * now just a lower bound for the *expired* state.
+ *
  * Returns { canJoin, minutesUntilOpen, isExpired, start }
+ * (minutesUntilOpen kept in the shape for callers but is always 0 now.)
  */
 export function getJoinWindow(selectedDay, selectedHour, now = new Date()) {
   const start = parseSessionStart(selectedDay, selectedHour);
-  if (!start) return { canJoin: false, minutesUntilOpen: null, isExpired: false, start: null };
-  const openAt = start.getTime() - 10 * 60 * 1000;
+  if (!start) {
+    // No schedule → always joinable, never expired.
+    return { canJoin: true, minutesUntilOpen: 0, isExpired: false, start: null };
+  }
   const closeAt = start.getTime() + 90 * 60 * 1000;
   const nowMs = now.getTime();
-  const canJoin = nowMs >= openAt && nowMs <= closeAt;
   const isExpired = nowMs > closeAt;
-  const minutesUntilOpen = nowMs < openAt ? Math.ceil((openAt - nowMs) / 60000) : 0;
-  return { canJoin, minutesUntilOpen, isExpired, start };
+  return { canJoin: !isExpired, minutesUntilOpen: 0, isExpired, start };
 }

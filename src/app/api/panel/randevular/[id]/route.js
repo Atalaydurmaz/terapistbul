@@ -10,7 +10,17 @@ function isValidUuid(value) {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-async function createDailyRoom(roomName, expiresAt) {
+async function createDailyRoom(roomName, selectedDay) {
+  // Room expires at selected_day + 24h, or 7 days from now if no day given.
+  // Earlier code used selected_day 00:00 + 1h which meant a session scheduled
+  // for e.g. 15:00 got a room that expired at 01:00 the same day — before the
+  // session even started. Widen generously; worst case Daily purges unused rooms.
+  let exp;
+  if (selectedDay) {
+    exp = Math.floor(new Date(selectedDay).getTime() / 1000) + 24 * 3600;
+  } else {
+    exp = Math.floor(Date.now() / 1000) + 7 * 24 * 3600;
+  }
   const body = {
     name: roomName,
     privacy: 'public',
@@ -19,18 +29,26 @@ async function createDailyRoom(roomName, expiresAt) {
       enable_chat: true,
       enable_screenshare: false,
       lang: 'tr',
+      exp,
     },
   };
-  if (expiresAt) {
-    body.properties.exp = Math.floor(new Date(expiresAt).getTime() / 1000) + 3600;
-  }
   const res = await fetch(`${DAILY_API}/rooms`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DAILY_KEY}` },
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Daily.co room oluşturulamadı');
+  if (!res.ok) {
+    // If the room already exists, fetch it instead of erroring.
+    if (data?.info?.includes('already exists') || data?.error === 'invalid-request-error') {
+      const getRes = await fetch(`${DAILY_API}/rooms/${roomName}`, {
+        headers: { Authorization: `Bearer ${DAILY_KEY}` },
+      });
+      const existing = await getRes.json();
+      if (getRes.ok && existing.url) return existing;
+    }
+    throw new Error(data.error || data.info || 'Daily.co room oluşturulamadı');
+  }
   return data;
 }
 
