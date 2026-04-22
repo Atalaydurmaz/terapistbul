@@ -74,18 +74,22 @@ export async function GET() {
       return Response.json([]);
     }
 
-    // 2) Fallback: rows booked under the same name but where the email was missing
-    //    (e.g. booking form submitted with empty email while user was logged in).
-    //    Without this, confirmed appointments disappear from /hesabim for the user
-    //    who actually booked them. We ONLY match null/empty email rows to avoid
-    //    leaking another user's appointments who happens to share the same name.
+    // 2) Fallback: rows booked under the same display name but where the email
+    //    column is null/empty OR different from the current session email
+    //    (e.g. user edited the form email before submitting, or a legacy row
+    //    pre-dates the email normalization). Without this, confirmed
+    //    appointments disappear from /hesabim for the user who actually booked
+    //    them but whose stored appointment email doesn't match their account.
+    //
+    //    Trade-off: two users with the exact same display name could see each
+    //    other's orphan rows. Acceptable for MVP; the proper fix is adding a
+    //    `client_id` FK to `clients.id` and matching on that.
     let byName = [];
     if (userName) {
       const { data: nameRows, error: nameErr } = await supabase
         .from('appointments')
         .select(selectCols)
         .ilike('name', userName)
-        .or('email.is.null,email.eq.')
         .order('created_at', { ascending: false });
       if (nameErr) {
         console.error('hesabim GET error (name fallback):', nameErr);
@@ -93,6 +97,14 @@ export async function GET() {
         byName = nameRows || [];
       }
     }
+
+    // Debug: log counts to help diagnose future "randevu yok" reports.
+    console.log('[hesabim GET]', {
+      userEmail,
+      userName,
+      byEmailCount: (byEmail || []).length,
+      byNameCount: byName.length,
+    });
 
     // Merge + dedupe by id; keep email matches first (more trustworthy)
     const seen = new Set();
