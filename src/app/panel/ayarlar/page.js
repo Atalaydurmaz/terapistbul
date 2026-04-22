@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-function Toggle({ value, onChange, label }) {
+function Toggle({ value, onChange, label, disabled }) {
   return (
     <div className="flex items-center justify-between py-3.5">
       <span className="text-sm text-slate-700">{label}</span>
       <button
-        onClick={() => onChange(!value)}
-        className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${value ? 'bg-teal-600' : 'bg-slate-300'}`}
+        onClick={() => !disabled && onChange(!value)}
+        disabled={disabled}
+        className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${value ? 'bg-teal-600' : 'bg-slate-300'} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
         <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? 'left-5' : 'left-0.5'}`} />
       </button>
@@ -16,12 +17,16 @@ function Toggle({ value, onChange, label }) {
   );
 }
 
-function SaveButton({ onClick, success }) {
+function SaveButton({ onClick, success, saving, error }) {
+  let label = 'Kaydet';
+  if (saving) label = 'Kaydediliyor…';
+  else if (success) label = 'Kaydedildi!';
   return (
     <button
       onClick={onClick}
-      className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
-        success ? 'bg-green-600 text-white' : 'bg-teal-600 text-white hover:bg-teal-700'
+      disabled={saving}
+      className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm disabled:opacity-70 ${
+        error ? 'bg-red-600 text-white' : success ? 'bg-green-600 text-white' : 'bg-teal-600 text-white hover:bg-teal-700'
       }`}
     >
       {success ? (
@@ -31,62 +36,125 @@ function SaveButton({ onClick, success }) {
           </svg>
           Kaydedildi!
         </span>
-      ) : 'Kaydet'}
+      ) : (error ? 'Hata — Tekrar Dene' : label)}
     </button>
   );
 }
 
+const INITIAL_NOTIFS = {
+  emailNewBooking: true, emailMessage: true, emailReminder: false,
+  smsNewBooking: true, smsReminder: true, smsMessage: false,
+  pushNewBooking: true, pushMessage: true, pushReminder: true,
+};
+const INITIAL_PRIVACY = {
+  profilePublic: true, showPhone: false, showEmail: false,
+  allowAllContact: false, allowPatientOnly: true,
+};
+
 export default function AyarlarPage() {
   const [activeTab, setActiveTab] = useState('hesap');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   // Hesap
   const [accountForm, setAccountForm] = useState({
-    email: 'nur@terapistbul.com',
-    phone: '+90 532 123 45 67',
+    email: '',
+    phone: '',
     currentPass: '',
     newPass: '',
     confirmPass: '',
   });
+  const [hasPassword, setHasPassword] = useState(false);
   const [accountSuccess, setAccountSuccess] = useState(false);
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountError, setAccountError] = useState('');
 
   // Bildirimler
-  const [notifs, setNotifs] = useState({
-    emailNewBooking: true,
-    emailMessage: true,
-    emailReminder: false,
-    smsNewBooking: true,
-    smsReminder: true,
-    smsMessage: false,
-    pushNewBooking: true,
-    pushMessage: true,
-    pushReminder: true,
-  });
+  const [notifs, setNotifs] = useState(INITIAL_NOTIFS);
   const [notifSuccess, setNotifSuccess] = useState(false);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifError, setNotifError] = useState('');
 
   // Gizlilik
-  const [privacy, setPrivacy] = useState({
-    profilePublic: true,
-    showPhone: false,
-    showEmail: false,
-    allowAllContact: false,
-    allowPatientOnly: true,
-  });
+  const [privacy, setPrivacy] = useState(INITIAL_PRIVACY);
   const [privacySuccess, setPrivacySuccess] = useState(false);
+  const [privacySaving, setPrivacySaving] = useState(false);
+  const [privacyError, setPrivacyError] = useState('');
 
   // Güvenlik
   const [twoFactor, setTwoFactor] = useState(false);
   const [securitySuccess, setSecuritySuccess] = useState(false);
+  const [securitySaving, setSecuritySaving] = useState(false);
+  const [securityError, setSecurityError] = useState('');
 
   const activeSessions = [
     { device: 'Chrome — Windows 11', location: 'İstanbul, TR', time: 'Şu an aktif', current: true },
-    { device: 'Safari — iPhone 15', location: 'İstanbul, TR', time: '2 saat önce', current: false },
-    { device: 'Firefox — MacBook', location: 'Ankara, TR', time: '3 gün önce', current: false },
   ];
 
-  const handleSave = (setSuccess) => {
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2000);
-  };
+  // --- Mount: load settings ---
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/panel/ayarlar', { credentials: 'include' });
+        if (!res.ok) throw new Error('load failed');
+        const d = await res.json();
+        if (cancelled) return;
+        setAccountForm((f) => ({ ...f, email: d.email || '', phone: d.phone || '' }));
+        setHasPassword(!!d.hasPassword);
+        if (d.notifs) setNotifs((n) => ({ ...n, ...d.notifs }));
+        if (d.privacy) setPrivacy((p) => ({ ...p, ...d.privacy }));
+        if (d.security) setTwoFactor(!!d.security.twoFactor);
+      } catch (e) {
+        if (!cancelled) setLoadError('Ayarlar yüklenemedi. Sayfayı yenileyin.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function save(section, data, setSaving, setSuccess, setError) {
+    setSaving(true);
+    setError('');
+    setSuccess(false);
+    try {
+      const res = await fetch('/api/panel/ayarlar', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, data }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'Kaydedilemedi');
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+      return json;
+    } catch (e) {
+      setError(e.message || 'Kaydedilemedi');
+      setTimeout(() => setError(''), 3000);
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveAccount() {
+    const payload = {
+      email: accountForm.email,
+      phone: accountForm.phone,
+    };
+    if (accountForm.currentPass || accountForm.newPass || accountForm.confirmPass) {
+      payload.currentPass = accountForm.currentPass;
+      payload.newPass = accountForm.newPass;
+      payload.confirmPass = accountForm.confirmPass;
+    }
+    const result = await save('hesap', payload, setAccountSaving, setAccountSuccess, setAccountError);
+    if (result) {
+      setAccountForm((f) => ({ ...f, currentPass: '', newPass: '', confirmPass: '' }));
+      if (payload.newPass) setHasPassword(true);
+    }
+  }
 
   const tabs = [
     { id: 'hesap', label: 'Hesap' },
@@ -95,8 +163,23 @@ export default function AyarlarPage() {
     { id: 'guvenlik', label: 'Güvenlik' },
   ];
 
+  if (loading) {
+    return (
+      <div className="max-w-3xl">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center text-sm text-slate-500">
+          Ayarlar yükleniyor…
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl space-y-6">
+      {loadError && (
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">
+          {loadError}
+        </div>
+      )}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         {/* Tabs */}
         <div className="border-b border-slate-100 overflow-x-auto">
@@ -142,7 +225,12 @@ export default function AyarlarPage() {
               </div>
 
               <div className="pt-4 border-t border-slate-100">
-                <h4 className="text-sm font-semibold text-slate-700 mb-4">Şifre Değiştir</h4>
+                <h4 className="text-sm font-semibold text-slate-700 mb-1">Şifre Değiştir</h4>
+                <p className="text-xs text-slate-400 mb-4">
+                  {hasPassword
+                    ? 'Parolanızı değiştirmek istemiyorsanız bu alanları boş bırakın.'
+                    : 'Henüz özel bir parola belirlemediniz. Geçici giriş parolanızla doğrulayıp kalıcı bir parola belirleyin.'}
+                </p>
                 <div className="space-y-3">
                   {[
                     { label: 'Mevcut Şifre', key: 'currentPass' },
@@ -156,6 +244,7 @@ export default function AyarlarPage() {
                         value={accountForm[f.key]}
                         onChange={(e) => setAccountForm({ ...accountForm, [f.key]: e.target.value })}
                         placeholder="••••••••"
+                        autoComplete="new-password"
                         className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       />
                     </div>
@@ -163,8 +252,14 @@ export default function AyarlarPage() {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end">
-                <SaveButton onClick={() => handleSave(setAccountSuccess)} success={accountSuccess} />
+              {accountError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-700">
+                  {accountError}
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end">
+                <SaveButton onClick={handleSaveAccount} success={accountSuccess} saving={accountSaving} error={!!accountError} />
               </div>
             </div>
           )}
@@ -213,8 +308,19 @@ export default function AyarlarPage() {
                 </div>
               ))}
 
+              {notifError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-700">
+                  {notifError}
+                </div>
+              )}
+
               <div className="flex justify-end pt-2">
-                <SaveButton onClick={() => handleSave(setNotifSuccess)} success={notifSuccess} />
+                <SaveButton
+                  onClick={() => save('bildirimler', notifs, setNotifSaving, setNotifSuccess, setNotifError)}
+                  success={notifSuccess}
+                  saving={notifSaving}
+                  error={!!notifError}
+                />
               </div>
             </div>
           )}
@@ -259,8 +365,19 @@ export default function AyarlarPage() {
                 </div>
               </div>
 
+              {privacyError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-700">
+                  {privacyError}
+                </div>
+              )}
+
               <div className="flex justify-end pt-2">
-                <SaveButton onClick={() => handleSave(setPrivacySuccess)} success={privacySuccess} />
+                <SaveButton
+                  onClick={() => save('gizlilik', privacy, setPrivacySaving, setPrivacySuccess, setPrivacyError)}
+                  success={privacySuccess}
+                  saving={privacySaving}
+                  error={!!privacyError}
+                />
               </div>
             </div>
           )}
@@ -300,24 +417,28 @@ export default function AyarlarPage() {
                         <p className="text-sm font-medium text-slate-700">{session.device}</p>
                         <p className="text-xs text-slate-400">{session.location} · {session.time}</p>
                       </div>
-                      {session.current ? (
-                        <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-lg font-medium flex-shrink-0">Aktif</span>
-                      ) : (
-                        <button className="text-xs text-red-500 hover:text-red-700 font-medium flex-shrink-0 hover:underline">
-                          Sonlandır
-                        </button>
-                      )}
+                      <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-lg font-medium flex-shrink-0">Aktif</span>
                     </div>
                   ))}
                 </div>
-
-                <button className="mt-4 w-full py-2.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium transition-colors">
-                  Tüm Cihazlarda Oturumu Kapat
-                </button>
+                <p className="mt-3 text-xs text-slate-400">
+                  Çoklu cihaz oturum yönetimi yakında — şu an yalnızca aktif oturum görüntüleniyor.
+                </p>
               </div>
 
+              {securityError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-700">
+                  {securityError}
+                </div>
+              )}
+
               <div className="flex justify-end pt-2">
-                <SaveButton onClick={() => handleSave(setSecuritySuccess)} success={securitySuccess} />
+                <SaveButton
+                  onClick={() => save('guvenlik', { twoFactor }, setSecuritySaving, setSecuritySuccess, setSecurityError)}
+                  success={securitySuccess}
+                  saving={securitySaving}
+                  error={!!securityError}
+                />
               </div>
             </div>
           )}
