@@ -369,12 +369,27 @@ export default function TerapistProfilClient({ therapist, others }) {
               {/* Date-based view (yeni format) */}
               {(() => {
                 const isDateBased = (availability || []).some(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
-                const pubToday = new Date(); pubToday.setHours(0,0,0,0);
-                const todayStr = pubToday.toISOString().split('T')[0];
+                const pubNow = new Date();
+                const pubToday = new Date(pubNow); pubToday.setHours(0,0,0,0);
+                // TR yerel tarih (toISOString UTC'ye çevirip gün kaydırabilir)
+                const todayStr = `${pubToday.getFullYear()}-${String(pubToday.getMonth() + 1).padStart(2, '0')}-${String(pubToday.getDate()).padStart(2, '0')}`;
+                const pubNowMinutes = pubNow.getHours() * 60 + pubNow.getMinutes();
+                const isPastHour = (ds, h) => {
+                  if (ds !== todayStr) return ds < todayStr;
+                  const [hh, mm] = String(h).split(':').map(Number);
+                  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+                  return hh * 60 + mm <= pubNowMinutes;
+                };
 
                 if (isDateBased) {
                   const futureDates = [...(availability || [])]
-                    .filter(ds => ds >= todayStr)
+                    .filter(ds => {
+                      if (ds < todayStr) return false;
+                      if (ds > todayStr) return true;
+                      // bugün: en az bir gelecek saat kalmış mı?
+                      const hrs = dayHours?.[ds] || [];
+                      return hrs.length === 0 || hrs.some((h) => !isPastHour(ds, h));
+                    })
                     .sort()
                     .slice(0, 8); // max 8 yaklaşan gün göster
 
@@ -387,22 +402,30 @@ export default function TerapistProfilClient({ therapist, others }) {
                             <p className="text-xs font-semibold text-slate-600 mb-1">{fmtDateTr(ds)}</p>
                             {hours.length > 0 ? (
                               <div className="flex flex-wrap gap-1 mb-2">
-                                {hours.map(h => (
-                                  <button
-                                    key={h}
-                                    onClick={() => setSelectedSlot(
-                                      selectedSlot?.day === ds && selectedSlot?.hour === h
-                                        ? null : { day: ds, hour: h }
-                                    )}
-                                    className={`text-xs px-2 py-0.5 rounded-md font-medium transition-colors ${
-                                      selectedSlot?.day === ds && selectedSlot?.hour === h
-                                        ? 'bg-teal-600 text-white ring-2 ring-teal-300'
-                                        : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-100'
-                                    }`}
-                                  >
-                                    {h}
-                                  </button>
-                                ))}
+                                {hours.map(h => {
+                                  const past = isPastHour(ds, h);
+                                  const sel = selectedSlot?.day === ds && selectedSlot?.hour === h;
+                                  return (
+                                    <button
+                                      key={h}
+                                      disabled={past}
+                                      onClick={() => {
+                                        if (past) return;
+                                        setSelectedSlot(sel ? null : { day: ds, hour: h });
+                                      }}
+                                      title={past ? 'Bu saat geçti' : undefined}
+                                      className={`text-xs px-2 py-0.5 rounded-md font-medium transition-colors ${
+                                        past
+                                          ? 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed line-through'
+                                          : sel
+                                            ? 'bg-teal-600 text-white ring-2 ring-teal-300'
+                                            : 'bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-100'
+                                      }`}
+                                    >
+                                      {h}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             ) : (
                               <p className="text-xs text-slate-400 italic mb-2">Saat eklenmemiş</p>

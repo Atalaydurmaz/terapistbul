@@ -29,11 +29,37 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
 
   // Format algılama: tarih bazlı (2026-04-07) vs haftanın günü adı
   const isDateBased = (availability || []).some(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
-  const bbToday = new Date(); bbToday.setHours(0,0,0,0);
-  const bbTodayStr = bbToday.toISOString().split('T')[0];
+  const bbNow = new Date();
+  const bbToday = new Date(bbNow); bbToday.setHours(0,0,0,0);
+  // toISOString UTC'ye çevirir — TR yerel tarihinde gün kayabilir. Yerel
+  // bileşenlerden manuel kuralım ki "bugün" TR saatine göre doğru olsun.
+  const bbTodayStr = `${bbToday.getFullYear()}-${String(bbToday.getMonth() + 1).padStart(2, '0')}-${String(bbToday.getDate()).padStart(2, '0')}`;
+  const bbNowMinutes = bbNow.getHours() * 60 + bbNow.getMinutes();
+
+  // Bir saatin (ör. "14:00") verilen gün için geçmişte kalıp kalmadığını döner.
+  // Sadece tarih bazlı takvimde (bugünün tarihi) uygulanır; haftalık şablonda
+  // "Çarşamba" seçimi gelecek haftaki Çarşamba olabileceği için gating atlanır.
+  const isPastSlot = (day, hour) => {
+    if (!day || !hour || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+    if (day > bbTodayStr) return false;
+    if (day < bbTodayStr) return true;
+    const [hh, mm] = String(hour).split(':').map(Number);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false;
+    return hh * 60 + mm <= bbNowMinutes;
+  };
+
+  // Bir günün tüm saatleri geçmişte mi? (bugün için tümüyle dolmuş gün)
+  const allHoursPast = (day) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day !== bbTodayStr) return false;
+    const hours = dayHours?.[day] || [];
+    if (hours.length === 0) return false;
+    return hours.every((h) => isPastSlot(day, h));
+  };
 
   const futureDates = isDateBased
-    ? [...(availability || [])].filter(ds => ds >= bbTodayStr).sort()
+    ? [...(availability || [])]
+        .filter(ds => ds >= bbTodayStr && !allHoursPast(ds))
+        .sort()
     : [];
 
   const availableDays = isDateBased
@@ -74,6 +100,10 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (modal === 'randevu' && isPastSlot(pickedDay, pickedHour)) {
+      alert('Seçtiğiniz saat geçti. Lütfen gelecek bir saat seçin.');
+      return;
+    }
     setLoading(true);
     try {
       const body = { ...form, therapistName, therapistEmail, type: modal };
@@ -283,21 +313,33 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
                                 </span>
                               </label>
                               {hoursForDay.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                  {hoursForDay.map((h) => (
-                                    <button
-                                      key={h}
-                                      type="button"
-                                      onClick={() => setPickedHour(h)}
-                                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all
-                                        ${pickedHour === h
-                                          ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                                          : 'bg-white text-slate-600 border-slate-200 hover:border-teal-400 hover:text-teal-600'}`}
-                                    >
-                                      {h}
-                                    </button>
-                                  ))}
-                                </div>
+                                <>
+                                  <div className="flex flex-wrap gap-2">
+                                    {hoursForDay.map((h) => {
+                                      const past = isPastSlot(pickedDay, h);
+                                      return (
+                                        <button
+                                          key={h}
+                                          type="button"
+                                          disabled={past}
+                                          onClick={() => { if (!past) setPickedHour(h); }}
+                                          title={past ? 'Bu saat geçti' : undefined}
+                                          className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all
+                                            ${past
+                                              ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed line-through'
+                                              : pickedHour === h
+                                                ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                                                : 'bg-white text-slate-600 border-slate-200 hover:border-teal-400 hover:text-teal-600'}`}
+                                        >
+                                          {h}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  {hoursForDay.every((h) => isPastSlot(pickedDay, h)) && (
+                                    <p className="mt-2 text-xs text-slate-400 italic">Bugünün saatleri dolmuş — lütfen başka bir gün seçin.</p>
+                                  )}
+                                </>
                               ) : (
                                 <p className="text-sm text-slate-400 italic">Bu gün için saat bilgisi girilmemiş.</p>
                               )}
