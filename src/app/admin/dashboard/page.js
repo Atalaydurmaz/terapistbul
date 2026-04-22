@@ -4,14 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-const topTherapists = [
-  { name: 'Dr. Ayşe Kaya', rating: 4.9, reviews: 63, city: 'İstanbul' },
-  { name: 'Uzm. Psk. Mehmet Demir', rating: 4.8, reviews: 89, city: 'Ankara' },
-  { name: 'Psk. Zeynep Arslan', rating: 4.8, reviews: 47, city: 'İzmir' },
-  { name: 'Dr. Kemal Aydın', rating: 4.7, reviews: 112, city: 'İstanbul' },
-  { name: 'Psk. Fatma Yıldız', rating: 4.7, reviews: 58, city: 'Bursa' },
-];
-
 const statusBadge = (s) => {
   if (s === 'bekliyor') return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">Bekliyor</span>;
   if (s === 'onaylandi') return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">Onaylı</span>;
@@ -23,6 +15,7 @@ export default function AdminDashboardPage() {
     therapists: 0, clients: 0, appointments: 0, pending: 0, applications: 0,
   });
   const [recentApplications, setRecentApplications] = useState([]);
+  const [topTherapists, setTopTherapists] = useState([]);
 
   const load = useCallback(async () => {
     try {
@@ -45,6 +38,19 @@ export default function AdminDashboardPage() {
         applications: apps.filter((a) => a.status === 'bekliyor').length,
       });
       setRecentApplications(apps.slice(0, 5));
+
+      // Gerçek veriden ilk 5 — yorum sayısı / rating olanlar öncelikli
+      const ranked = [...terapistler]
+        .filter((t) => (t.rating || 0) > 0 || (t.review_count || 0) > 0)
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.review_count || 0) - (a.review_count || 0))
+        .slice(0, 5)
+        .map((t) => ({
+          name: t.name,
+          rating: Number(t.rating || 0).toFixed(1),
+          reviews: t.review_count || 0,
+          city: t.city || '—',
+        }));
+      setTopTherapists(ranked);
     } catch {}
   }, []);
 
@@ -220,24 +226,33 @@ export default function AdminDashboardPage() {
             <Link href="/admin/terapistler" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">Tümünü gör →</Link>
           </div>
           <div className="p-5 space-y-3">
-            {topTherapists.map((t, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <span className="text-slate-600 text-sm font-bold w-5 flex-shrink-0">{i + 1}.</span>
-                <div className="w-8 h-8 bg-teal-600/30 rounded-full flex items-center justify-center text-teal-400 text-xs font-bold flex-shrink-0">
-                  {t.name.split(' ').pop().charAt(0)}
+            {topTherapists.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-lg mb-2">
+                  ⭐
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium truncate">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.city} · {t.reviews} yorum</p>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                  </svg>
-                  <span className="text-amber-400 text-sm font-semibold">{t.rating}</span>
-                </div>
+                <p className="text-xs text-slate-500">Henüz puanlama yok.</p>
               </div>
-            ))}
+            ) : (
+              topTherapists.map((t, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <span className="text-slate-600 text-sm font-bold w-5 flex-shrink-0">{i + 1}.</span>
+                  <div className="w-8 h-8 bg-teal-600/30 rounded-full flex items-center justify-center text-teal-400 text-xs font-bold flex-shrink-0">
+                    {t.name.split(' ').pop().charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-medium truncate">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.city} · {t.reviews} yorum</p>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span className="text-amber-400 text-sm font-semibold">{t.rating}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
