@@ -49,6 +49,20 @@ export function parseSessionStart(selectedDay, selectedHour) {
  */
 export function getJoinWindow(selectedDay, selectedHour, now = new Date()) {
   const start = parseSessionStart(selectedDay, selectedHour);
+
+  // LOCAL / DEV BYPASS — geliştirme sırasında test etmek için her zaman
+  // joinable ve not-expired döndürüyoruz. NODE_ENV === 'development' hem
+  // server-side render hem de `next dev`'de true. Browser'da ayrıca
+  // localhost/127.0.0.1 kontrolü ekledik — preview deploy'larda değil
+  // sadece makinedeki `npm run dev` açıkken devreye girsin diye.
+  // Production build'de (Vercel) NODE_ENV='production' olduğu için bu
+  // blok hiç çalışmaz; normal 90 dk kapatma penceresi geçerli kalır.
+  const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development')
+    || (typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(window.location.hostname));
+  if (isDev) {
+    return { canJoin: true, minutesUntilOpen: 0, isExpired: false, start };
+  }
+
   if (!start) {
     // No schedule → always joinable, never expired.
     return { canJoin: true, minutesUntilOpen: 0, isExpired: false, start: null };
