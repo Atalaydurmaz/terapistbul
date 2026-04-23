@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getResend } from '@/lib/resend';
 import { fmtDateTr } from '@/lib/date';
+import { renderEmail, infoRow } from '@/lib/email-template';
 
 const DAILY_API = 'https://api.daily.co/v1';
 const DAILY_KEY = process.env.DAILY_API_KEY;
@@ -121,14 +122,32 @@ export async function PATCH(req, { params }) {
       const gorusmeUrl = data.daily_room_url
         ? `${appUrl}/gorusme?room=${encodeURIComponent(data.daily_room_url)}&terapist=${encodeURIComponent(data.therapist_name || '')}&name=${encodeURIComponent(data.name || '')}&id=${id}`
         : null;
-      const videoLink = gorusmeUrl
-        ? `<p>🎥 <strong>Online Görüşme Linki:</strong> <a href="${gorusmeUrl}" style="color:#0d9488;">${gorusmeUrl}</a></p><p style="color:#64748b;font-size:12px;">Bu link sadece size özeldir, başkasıyla paylaşmayın.</p>`
-        : '';
 
       const recipients = [data.email];
       if (process.env.CONTACT_EMAIL && process.env.CONTACT_EMAIL !== data.email) {
         recipients.push(process.env.CONTACT_EMAIL);
       }
+
+      const html = renderEmail({
+        title: 'Randevunuz Onaylandı',
+        preheader: `${data.therapist_name} ile ${data.selected_day ? fmtDateTr(data.selected_day) : ''} ${data.selected_hour || ''} görüşmeniz hazır.`,
+        accentIcon: '✅',
+        bodyHtml: `
+          <p style="margin:0 0 12px 0;">Sayın <strong>${data.name}</strong>,</p>
+          <p style="margin:0 0 20px 0;"><strong>${data.therapist_name}</strong> ile randevunuz onaylandı.</p>
+          ${infoRow('📅', 'Tarih', data.selected_day ? fmtDateTr(data.selected_day) : '—')}
+          ${infoRow('🕒', 'Saat', data.selected_hour || '—')}
+          ${gorusmeUrl ? `
+          <div style="margin-top:24px;padding:18px 20px;background:linear-gradient(135deg,#ecfeff 0%,#f0fdfa 100%);border:1px solid #99f6e4;border-radius:12px;">
+            <p style="margin:0 0 6px 0;color:#0f766e;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🎥 Online Görüşme</p>
+            <p style="margin:0;color:#134e4a;font-size:14px;line-height:1.5;">Görüşme saatinde aşağıdaki butona tıklayarak odaya girebilirsiniz. Bu link size özeldir, başkasıyla paylaşmayın.</p>
+          </div>` : ''}
+          <p style="margin:20px 0 0 0;color:#64748b;font-size:13px;">Görüşmenizi hesabınızdaki <strong>Randevularım</strong> sekmesinden de başlatabilirsiniz.</p>
+        `,
+        ctaLabel: gorusmeUrl ? 'Görüşmeye Katıl' : 'Hesabımda Görüntüle',
+        ctaUrl: gorusmeUrl || `${appUrl}/hesabim?tab=randevular`,
+        footerNote: 'Bu e-posta TerapistBul platformu üzerinden otomatik gönderildi.',
+      });
 
       const resend = getResend();
       if (resend) {
@@ -136,14 +155,7 @@ export async function PATCH(req, { params }) {
           from: 'TerapistBul <onboarding@resend.dev>',
           to: recipients,
           subject: `✅ Randevunuz Onaylandı — ${data.therapist_name}`,
-          html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
-            <h2 style="color:#0d9488;">✅ Randevunuz Onaylandı</h2>
-            <p>Sayın <strong>${data.name}</strong>,</p>
-            <p><strong>${data.therapist_name}</strong> ile randevunuz onaylandı.</p>
-            <p>📅 <strong>${data.selected_day ? fmtDateTr(data.selected_day) : '—'}</strong> saat <strong>${data.selected_hour || '—'}</strong></p>
-            ${videoLink}
-            <p style="color:#64748b;font-size:13px;">Görüşme saatinde linke tıklayarak odaya girebilirsiniz.</p>
-          </div>`,
+          html,
         });
       }
     } catch (e) { console.error('Email error:', e); }

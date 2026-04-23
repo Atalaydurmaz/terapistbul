@@ -137,6 +137,30 @@ export async function GET() {
       return Response.json([]);
     }
 
+    // Boş sonuç dönüyorsa response'a debug header ekle ki Network tab'dan
+    // neyin yanlış gittiğini görebilelim (Vercel runtime log'larına erişim yok).
+    const isEmpty = (data || []).length === 0;
+    let debugHeader = null;
+    if (isEmpty) {
+      const { data: recent } = await supabase
+        .from('appointments')
+        .select('id, name, email, therapist_name, type, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      debugHeader = {
+        viewerEmail: userEmail,
+        viewerName: userName,
+        recentRows: (recent || []).map((r) => ({
+          id: r.id?.slice?.(0, 8),
+          name: r.name,
+          email: r.email,
+          therapist: r.therapist_name,
+          type: r.type,
+          status: r.status,
+        })),
+      };
+    }
+
     // Client tarafı eski alan adlarını kullanıyor — geri uyumluluk
     const mapped = (data || []).map((row) => ({
       id: row.id,
@@ -162,7 +186,13 @@ export async function GET() {
       updatedAt: row.updated_at,
     }));
 
-    return Response.json(mapped);
+    const res = Response.json(mapped);
+    if (debugHeader) {
+      try {
+        res.headers.set('x-hesabim-debug', Buffer.from(JSON.stringify(debugHeader)).toString('base64'));
+      } catch {}
+    }
+    return res;
   } catch (e) {
     console.error('hesabim GET error:', e);
     return Response.json([]);

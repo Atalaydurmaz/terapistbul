@@ -2,6 +2,7 @@ import { getResend } from '@/lib/resend';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { auth } from '@/auth';
 import { fmtDateTr } from '@/lib/date';
+import { renderEmail, infoRow } from '@/lib/email-template';
 
 export async function POST(req) {
   try {
@@ -22,23 +23,24 @@ export async function POST(req) {
       ? `Yeni Randevu Talebi — ${name} → ${therapistName}`
       : `Yeni Mesaj — ${name} → ${therapistName}`;
 
-    const adminHtml = `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
-        <h2 style="color:#0d9488;">${isRandevu ? '📅 Yeni Randevu Talebi' : '💬 Yeni Mesaj'}</h2>
-        <p style="color:#64748b;">Terapist: <strong>${therapistName || '—'}</strong></p>
-        <hr style="border:none;border-top:1px solid #e2e8f0;"/>
-        <table style="width:100%;border-collapse:collapse;">
-          <tr><td style="padding:7px 0;color:#64748b;font-size:13px;width:120px;">Ad Soyad</td><td style="font-weight:600;color:#1e293b;">${name}</td></tr>
-          <tr><td style="padding:7px 0;color:#64748b;font-size:13px;">E-posta</td><td><a href="mailto:${email}" style="color:#0d9488;">${email}</a></td></tr>
-          ${phone ? `<tr><td style="padding:7px 0;color:#64748b;font-size:13px;">Telefon</td><td>${phone}</td></tr>` : ''}
-          ${selectedDay ? `<tr><td style="padding:7px 0;color:#64748b;font-size:13px;">Gün</td><td style="font-weight:600;color:#0d9488;">${fmtDateTr(selectedDay)}</td></tr>` : ''}
-          ${selectedHour ? `<tr><td style="padding:7px 0;color:#64748b;font-size:13px;">Saat</td><td style="font-weight:600;color:#0d9488;">${selectedHour}</td></tr>` : ''}
-        </table>
-        <div style="background:#f8fafc;border-left:3px solid #0d9488;padding:14px 18px;border-radius:4px;margin-top:16px;">
-          <p style="margin:0;color:#334155;font-size:14px;white-space:pre-wrap;">${note}</p>
+    const adminHtml = renderEmail({
+      title: isRandevu ? 'Yeni Randevu Talebi' : 'Yeni Mesaj',
+      preheader: `${name} → ${therapistName}`,
+      accentIcon: isRandevu ? '📅' : '💬',
+      bodyHtml: `
+        <p style="margin:0 0 8px 0;color:#64748b;font-size:14px;">Terapist</p>
+        <p style="margin:0 0 16px 0;font-size:16px;font-weight:600;">${therapistName || '—'}</p>
+        ${infoRow('👤', 'Ad Soyad', name)}
+        ${infoRow('✉️', 'E-posta', `<a href="mailto:${email}" style="color:#0d9488;text-decoration:none;">${email}</a>`)}
+        ${phone ? infoRow('📞', 'Telefon', phone) : ''}
+        ${selectedDay ? infoRow('📅', 'Gün', fmtDateTr(selectedDay)) : ''}
+        ${selectedHour ? infoRow('🕒', 'Saat', selectedHour) : ''}
+        <div style="margin-top:20px;padding:16px 18px;background:#f0fdfa;border-left:3px solid #0d9488;border-radius:8px;">
+          <p style="margin:0;color:#134e4a;font-size:14px;white-space:pre-wrap;line-height:1.5;">${note}</p>
         </div>
-      </div>
-    `;
+      `,
+      footerNote: 'Bu e-posta TerapistBul platformu üzerinden otomatik gönderildi.',
+    });
 
     // 1) Admin + terapist e-postası
     const adminRecipients = [process.env.CONTACT_EMAIL || 'durmazatalay6@gmail.com'];
@@ -64,22 +66,40 @@ export async function POST(req) {
     // 2) Danışana ayrı onay e-postası — talep alındı bildirimi
     if (email) {
       const clientSubject = isRandevu
-        ? `✉️ Randevu Talebiniz Alındı — ${therapistName}`
-        : `✉️ Mesajınız Alındı — ${therapistName}`;
+        ? `Randevu Talebiniz Alındı — ${therapistName}`
+        : `Mesajınız Alındı — ${therapistName}`;
 
-      const clientHtml = `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
-          <h2 style="color:#0d9488;">${isRandevu ? '📅 Randevu Talebiniz Alındı' : '💬 Mesajınız Alındı'}</h2>
-          <p>Sayın <strong>${name}</strong>,</p>
-          <p><strong>${therapistName}</strong> ${isRandevu ? 'ile randevu talebiniz' : 'adlı terapiste mesajınız'} tarafımıza ulaştı.</p>
-          ${isRandevu ? `<p>📅 <strong>${selectedDay ? fmtDateTr(selectedDay) : '—'}</strong> ${selectedHour ? `saat <strong>${selectedHour}</strong>` : ''}</p>` : ''}
-          <p>Terapist kısa süre içinde ${isRandevu ? 'randevunuzu değerlendirip onaylayacaktır' : 'size dönüş yapacaktır'}. Onaylandığında ${isRandevu ? 'görüşme linkini' : 'yanıtı'} e-posta ile alacaksınız.</p>
-          <div style="background:#f8fafc;border-left:3px solid #0d9488;padding:14px 18px;border-radius:4px;margin:16px 0;">
-            <p style="margin:0;color:#334155;font-size:14px;white-space:pre-wrap;">${note}</p>
-          </div>
-          <p style="color:#64748b;font-size:13px;">Durumu <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3654'}/hesabim" style="color:#0d9488;">hesabım</a> sayfasından takip edebilirsiniz.</p>
-        </div>
-      `;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://terapistibul.com';
+      const clientHtml = renderEmail({
+        title: isRandevu ? 'Randevu Talebiniz Alındı' : 'Mesajınız Alındı',
+        preheader: isRandevu
+          ? `${therapistName} ile ${selectedDay ? fmtDateTr(selectedDay) : ''} ${selectedHour || ''} randevunuz değerlendiriliyor.`
+          : `${therapistName} size kısa süre içinde dönüş yapacak.`,
+        accentIcon: isRandevu ? '📅' : '💬',
+        bodyHtml: `
+          <p style="margin:0 0 12px 0;">Sayın <strong>${name}</strong>,</p>
+          <p style="margin:0 0 20px 0;">
+            <strong>${therapistName}</strong>
+            ${isRandevu ? ' ile randevu talebiniz' : ' adlı terapiste mesajınız'}
+            tarafımıza ulaştı.
+          </p>
+          ${isRandevu && selectedDay ? infoRow('📅', 'Tarih', fmtDateTr(selectedDay)) : ''}
+          ${isRandevu && selectedHour ? infoRow('🕒', 'Saat', selectedHour) : ''}
+          <p style="margin:20px 0 0 0;color:#64748b;font-size:14px;">
+            Terapist kısa süre içinde
+            ${isRandevu ? 'randevunuzu değerlendirip onaylayacaktır' : 'size dönüş yapacaktır'}.
+            ${isRandevu ? 'Onaylandığında görüşme linkini hem e-posta ile alacak hem de hesabınızda göreceksiniz.' : ''}
+          </p>
+          ${note ? `
+          <div style="margin-top:20px;padding:16px 18px;background:#f0fdfa;border-left:3px solid #0d9488;border-radius:8px;">
+            <p style="margin:0 0 6px 0;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Talebiniz</p>
+            <p style="margin:0;color:#134e4a;font-size:14px;white-space:pre-wrap;line-height:1.5;">${note}</p>
+          </div>` : ''}
+        `,
+        ctaLabel: 'Hesabımda Görüntüle',
+        ctaUrl: `${appUrl}/hesabim?tab=randevular`,
+        footerNote: 'Bu e-postayı TerapistBul üzerinden aldığınız için teşekkür ederiz.',
+      });
 
       if (resend) {
         try {
