@@ -41,7 +41,9 @@ function HesabimInner() {
   const messagesRef = useRef([]);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30 * 1000);
+    // 15 sn — countdown "dk" hassasiyetinde; 30 sn'de sayaç atladığı hissi
+    // veriyordu. 15 sn hem pil dostu hem de yeterince "canlı" hissettiriyor.
+    const id = setInterval(() => setNow(new Date()), 15 * 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -542,10 +544,32 @@ function HesabimInner() {
                       {r.status === 'onayli' && (() => {
                         const day = r.selectedDay || r.selected_day;
                         const hour = r.selectedHour || r.selected_hour;
-                        const { canJoin, isExpired } = getJoinWindow(day, hour, now);
+                        const { canJoin, isExpired, start } = getJoinWindow(day, hour, now);
                         const sessionId = r.supabaseId || r.id;
                         const isPaid = r.paymentStatus === 'paid';
                         const isRefunded = r.paymentStatus === 'refunded';
+                        const hasRoom = !!r.daily_room_url;
+
+                        // Görüşmeye kalan süre — "1 gün 3 sa", "45 dk", "Şimdi başlıyor"
+                        // gibi insan-okunabilir bir ifade üret. now her 30 sn'de bir
+                        // güncellendiği için otomatik sayım yapıyor.
+                        let countdownLabel = null;
+                        if (start) {
+                          const diffMs = start.getTime() - now.getTime();
+                          const absMin = Math.floor(Math.abs(diffMs) / 60000);
+                          if (diffMs <= 0 && !isExpired) {
+                            countdownLabel = 'Görüşme başladı — şimdi katılabilirsiniz';
+                          } else if (diffMs > 0) {
+                            const days = Math.floor(absMin / (60 * 24));
+                            const hours = Math.floor((absMin % (60 * 24)) / 60);
+                            const mins = absMin % 60;
+                            const parts = [];
+                            if (days > 0) parts.push(`${days} gün`);
+                            if (hours > 0) parts.push(`${hours} sa`);
+                            if (days === 0 && mins > 0) parts.push(`${mins} dk`);
+                            countdownLabel = `Görüşmeye ${parts.join(' ') || '1 dk'} kaldı`;
+                          }
+                        }
 
                         if (isRefunded) {
                           return (
@@ -567,21 +591,43 @@ function HesabimInner() {
                           );
                         }
 
-                        // Onaylı randevu — görüşme linki her zaman aktif (maildeki link gibi).
-                        // Ödeme yapılmadıysa küçük bir "Ödeme Yap" linkini yanında gösteriyoruz,
-                        // ama Görüşmeye Katıl butonunu engellemiyoruz.
+                        // Onaylı randevu — görüşme linki her zaman aktif (maildeki
+                        // link gibi). daily_room_url henüz oluşmadıysa butonu pasif
+                        // gösterip "Bağlantı hazırlanıyor" mesajı veriyoruz; Realtime
+                        // tetiklenince zaten yeniden render olacak.
                         return (
                           <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
                             {canJoin && (
-                              <Link
-                                href={`/panel/session/${sessionId}`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                              hasRoom ? (
+                                <Link
+                                  href={`/panel/session/${sessionId}`}
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                  </svg>
+                                  Görüşmeye Katıl
+                                </Link>
+                              ) : (
+                                <span
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl cursor-wait"
+                                  title="Görüşme odası hazırlanıyor, birkaç saniye içinde aktif olacak"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                  </svg>
+                                  Bağlantı hazırlanıyor, lütfen bekleyin.
+                                </span>
+                              )
+                            )}
+                            {countdownLabel && (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 text-teal-700 border border-teal-100 text-xs font-medium rounded-lg">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <polyline points="12 6 12 12 16 14" />
                                 </svg>
-                                Görüşmeye Katıl
-                              </Link>
+                                {countdownLabel}
+                              </span>
                             )}
                             {isPaid ? (
                               <span className="text-xs text-green-600 font-medium">✓ Ödendi</span>

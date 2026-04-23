@@ -60,13 +60,16 @@ export async function GET() {
     const userName = (session.user.name || '').trim();
     const supabase = createAdminClient();
 
-    const selectCols = 'id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction';
+    const selectCols = 'id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, daily_room_name, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction';
 
-    // 1) Primary match: email (case-insensitive). This is the canonical link.
+    // 1) Primary match: email with wildcard %email% (case-insensitive). Catches
+    // trailing spaces, "+tag" variants, and any stored whitespace that exact
+    // match would miss. Previously we used `.ilike('email', userEmail)` with
+    // no wildcards — which is just case-insensitive equality and was brittle.
     const { data: byEmail, error: emailErr } = await supabase
       .from('appointments')
       .select(selectCols)
-      .ilike('email', userEmail)
+      .ilike('email', `%${userEmail}%`)
       .order('created_at', { ascending: false });
 
     if (emailErr) {
@@ -103,29 +106,44 @@ export async function GET() {
       }
     }
 
-    // Debug: log counts + sample of what's actually in DB so we can diagnose
-    // "randevu yok" reports from Vercel runtime logs.
-    let debugSample = [];
-    if ((byEmail || []).length === 0 && byName.length === 0) {
-      const { data: recent } = await supabase
-        .from('appointments')
-        .select('id, name, email, type, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      debugSample = recent || [];
+    // 3) Phone fallback — if the `clients` table has a phone for this user and
+    //    the appointment was booked with that phone but a different email, we
+    //    still want it to show up. Cheap extra query; skipped if no phone.
+    let byPhone = [];
+    try {
+      const { data: clientRow } = await supabase
+        .from('clients')
+        .select('phone')
+        .ilike('email', userEmail)
+        .maybeSingle();
+      const userPhone = (clientRow?.phone || '').replace(/\s+/g, '');
+      if (userPhone && userPhone.length >= 7) {
+        // Use the last 7 digits so +90 / 0 prefix variants still match.
+        const phoneTail = userPhone.slice(-7);
+        const { data: phoneRows } = await supabase
+          .from('appointments')
+          .select(selectCols)
+          .ilike('phone', `%${phoneTail}%`)
+          .order('created_at', { ascending: false });
+        byPhone = phoneRows || [];
+      }
+    } catch (e) {
+      console.error('hesabim GET error (phone fallback):', e);
     }
+
     console.log('[hesabim GET]', {
       userEmail,
       userName,
       byEmailCount: (byEmail || []).length,
       byNameCount: byName.length,
-      debugSample,
+      byPhoneCount: byPhone.length,
     });
 
-    // Merge + dedupe by id; keep email matches first (more trustworthy)
+    // Merge + dedupe by id; email matches first (most trustworthy), then name,
+    // then phone. First insertion wins — later duplicate rows are dropped.
     const seen = new Set();
     const combined = [];
-    for (const row of [...(byEmail || []), ...byName]) {
+    for (const row of [...(byEmail || []), ...byName, ...byPhone]) {
       if (seen.has(row.id)) continue;
       seen.add(row.id);
       combined.push(row);
@@ -137,19 +155,26 @@ export async function GET() {
       return Response.json([]);
     }
 
-    // Boş sonuç dönüyorsa response'a debug header ekle ki Network tab'dan
-    // neyin yanlış gittiğini görebilelim (Vercel runtime log'larına erişim yok).
-    const isEmpty = (data || []).length === 0;
+    // Debug header — HER response'a ekliyoruz (sadece boşken değil). Böylece
+    // user "randevu 2 görünüyor ama 3 olmalıydı" derse de DB'deki son 5 kaydı
+    // Network tab'dan karşılaştırabiliyoruz. Prod'da bu header'ı kapatmak için
+    // env var eklenebilir; şimdilik teşhis için açık.
     let debugHeader = null;
-    if (isEmpty) {
+    try {
       const { data: recent } = await supabase
         .from('appointments')
-        .select('id, name, email, therapist_name, type, status, created_at')
+        .select('id, name, email, therapist_name, type, status, selected_day, selected_hour, created_at')
         .order('created_at', { ascending: false })
         .limit(5);
       debugHeader = {
         viewerEmail: userEmail,
         viewerName: userName,
+        matches: {
+          byEmail: (byEmail || []).length,
+          byName: byName.length,
+          byPhone: byPhone.length,
+          total: combined.length,
+        },
         recentRows: (recent || []).map((r) => ({
           id: r.id?.slice?.(0, 8),
           name: r.name,
@@ -157,9 +182,11 @@ export async function GET() {
           therapist: r.therapist_name,
           type: r.type,
           status: r.status,
+          day: r.selected_day,
+          hour: r.selected_hour,
         })),
       };
-    }
+    } catch { /* debug best-effort */ }
 
     // Client tarafı eski alan adlarını kullanıyor — geri uyumluluk
     const mapped = (data || []).map((row) => ({
