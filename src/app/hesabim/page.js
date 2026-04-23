@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -32,10 +32,32 @@ function HesabimInner() {
   const [now, setNow] = useState(() => new Date());
   const [insights, setInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  // Toast ({ id, type, message }) — realtime onay bildirimleri için. Tek seferde
+  // birden fazla toast yığılmasın diye basit single-slot kullanıyoruz.
+  const [toast, setToast] = useState(null);
+  // messages'i realtime callback içinde stale kalmadan okumak için ref tutuyoruz.
+  // useEffect deps'ine `messages` eklemek subscription'ı her state değişiminde
+  // tear down edip yeniden kurar — bu hem performans hem de race condition sorunu.
+  const messagesRef = useRef([]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30 * 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // messages ref'ini state ile senkron tut — realtime callback içinden stale
+  // olmayan mevcut listeyi okumak için kullanıyoruz.
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // Toast otomatik kapanma — 6 saniye sonra söner. Kullanıcı x'e basarsa hemen.
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ id: Date.now(), type, message });
   }, []);
 
   const handleSend = async () => {
@@ -79,7 +101,26 @@ function HesabimInner() {
     try {
       const r = await fetch('/api/hesabim/mesajlar');
       const data = await r.json();
-      setMessages(data);
+      // Durum geçişi tespit — bekliyor → onayli olan randevu varsa toast göster.
+      // Realtime event bazlı yerine fetch-sonrası karşılaştırma yapıyoruz çünkü
+      // payload.new doğrudan gelse bile UI state ile senkron olmayabilir.
+      setMessages((prev) => {
+        try {
+          const prevById = new Map(prev.map((m) => [m.id, m]));
+          const newlyConfirmed = data.find((m) => {
+            if (m.type !== 'randevu' || m.status !== 'onayli') return false;
+            const before = prevById.get(m.id);
+            return before && before.status !== 'onayli';
+          });
+          if (newlyConfirmed) {
+            showToast(
+              `Randevunuz ${newlyConfirmed.therapistName ? `(${newlyConfirmed.therapistName}) ` : ''}terapistiniz tarafından onaylandı! 🎉`,
+              'success',
+            );
+          }
+        } catch { /* ignore diff errors */ }
+        return data;
+      });
       setLoading(false);
       setSelectedTherapist((current) => {
         if (current) return current;
@@ -89,7 +130,7 @@ function HesabimInner() {
     } catch {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   const loadInsights = useCallback(async () => {
     setInsightsLoading(true);
@@ -119,18 +160,39 @@ function HesabimInner() {
     const userEmail = session?.user?.email?.toLowerCase();
     if (!userEmail) return;
 
+    // Realtime subscription — onaylı geçişini anlık yakalamak için.
+    // Önceden `filter: email=eq.${userEmail}` kullanıyorduk ama Supabase Realtime
+    // filtresi case-sensitive ve sütun null/farklı yazılırsa event hiç gelmiyor.
+    // Artık tüm appointments UPDATE'lerini dinliyoruz ve server-side
+    // /api/hesabim/mesajlar zaten email + isim eşlemesiyle filtreliyor.
+    // Payload'daki new/old.email veya new/old.name viewer'la eşleşiyorsa veya
+    // halihazırda listedeki bir randevunun id'si eşleşiyorsa refetch atıyoruz —
+    // bu sayede her rastgele event için network'e gidip gelmiyoruz.
     const supabase = createClient();
     const channel = supabase
       .channel(`hesabim-${userEmail}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'appointments', filter: `email=eq.${userEmail}` },
-        loadMessages,
+        { event: '*', schema: 'public', table: 'appointments' },
+        (payload) => {
+          const row = payload.new || payload.old || {};
+          const rowEmail = (row.email || '').toLowerCase();
+          const rowName = (row.name || '').toLowerCase();
+          const viewerName = (session?.user?.name || '').toLowerCase();
+          const knownId = messagesRef.current.some(
+            (m) => m.id === row.id || m.supabaseId === row.id,
+          );
+          const mineByEmail = rowEmail && rowEmail === userEmail;
+          const mineByName = viewerName && rowName && rowName.includes(viewerName.split(' ')[0]);
+          if (knownId || mineByEmail || mineByName) {
+            loadMessages();
+          }
+        },
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [status, router, session?.user?.email, loadMessages]);
+  }, [status, router, session?.user?.email, session?.user?.name, loadMessages]);
 
   if (status === 'loading' || loading) {
     return (
@@ -173,6 +235,67 @@ function HesabimInner() {
 
   return (
     <div className="bg-slate-50 min-h-screen py-8">
+      {/* Realtime toast — randevu onaylandığında alt-sağdan kayarak gelir.
+          Mobile'da alt-orta, desktop'ta alt-sağ. aria-live ile screen reader'a
+          da duyuruyoruz. */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 z-50 max-w-sm w-[calc(100%-2rem)] sm:w-auto animate-[slideUp_0.3s_ease-out]"
+          style={{ animation: 'slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}
+        >
+          <div className={`flex items-start gap-3 p-4 pr-3 rounded-2xl shadow-lg border ${
+            toast.type === 'success'
+              ? 'bg-white border-emerald-200'
+              : 'bg-white border-slate-200'
+          }`}>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+              toast.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {toast.type === 'success' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0 pt-0.5">
+              <p className="text-sm font-medium text-slate-800 leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setToast(null)}
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1 -m-1"
+              aria-label="Bildirimi kapat"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <style jsx>{`
+            @keyframes slideUpFade {
+              from { opacity: 0; transform: translate(-50%, 20px); }
+              to { opacity: 1; transform: translate(-50%, 0); }
+            }
+            @media (min-width: 640px) {
+              @keyframes slideUpFade {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+            }
+          `}</style>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm mb-6 flex items-center gap-4">
