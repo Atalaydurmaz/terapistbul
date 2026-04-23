@@ -48,11 +48,19 @@ export async function POST(req) {
 
   const normalizedEmail = String(email).trim().toLowerCase();
 
-  // 1. Static demo accounts (ak@, md@) — parola yok, sadece DEV fallback
+  const supabase = createAdminClient();
+
+  // 1. Static demo accounts (ak@, md@) — önce Supabase'deki aynı isimli satırdan
+  // password_hash'ı kontrol et; yoksa PANEL_DEV_PASSWORD fallback.
   for (const t of staticTherapists) {
     const staticEmail = `${nameToInitials(t.name)}@terapistbul.com`;
     if (staticEmail === normalizedEmail) {
-      const ok = await checkPassword(null, password);
+      const { data: dbRow } = await supabase
+        .from('therapists')
+        .select('id, name, email, password_hash')
+        .eq('name', t.name)
+        .maybeSingle();
+      const ok = await checkPassword(dbRow || null, password);
       if (!ok) return Response.json({ error: 'E-posta veya şifre hatalı.' }, { status: 401 });
       return buildResponse(
         { role: 'therapist', therapistId: t.id, email: normalizedEmail, name: t.name },
@@ -62,7 +70,6 @@ export async function POST(req) {
   }
 
   // 2. Supabase therapists (aktif)
-  const supabase = createAdminClient();
   const { data: dbTherapists } = await supabase
     .from('therapists')
     .select('id, name, email, password_hash')
