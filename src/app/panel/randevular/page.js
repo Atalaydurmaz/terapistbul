@@ -255,6 +255,21 @@ export default function RandevularPage() {
                         >
                           İptal Et
                         </button>
+                        {/* DEV-only: terapist onaylamadan da Görüşme sayfasına
+                            gidebilmek için hızlı kısayol. Production build'de
+                            NODE_ENV='production' olduğu için render edilmez. */}
+                        {process.env.NODE_ENV !== 'production' && (
+                          <Link
+                            href={`/panel/session/${apt.id}`}
+                            className="px-3 py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                            title="DEV: onaysız test başlatma"
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                            Test Başlat
+                          </Link>
+                        )}
                       </>
                     )}
                     {apt.status === 'onayli' && (() => {

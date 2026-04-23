@@ -138,8 +138,11 @@ export async function GET(req, { params }) {
 
   // Only provision a Daily room once the appointment is approved. Clients
   // shouldn't be able to trigger room creation on a bekliyor/iptal row.
+  // DEV bypass: local'de terapist "Test Başlat" ile onaysız odaya girebilir
+  // — NODE_ENV production iken bu blok geçmez, gerçek kullanıcı etkilenmez.
+  const isDev = process.env.NODE_ENV !== 'production';
   let roomUrl = apt.daily_room_url;
-  if (!roomUrl && apt.status === 'onayli') {
+  if (!roomUrl && (apt.status === 'onayli' || (isDev && viewer.role === 'therapist'))) {
     const supabase = createAdminClient();
     roomUrl = await ensureDailyRoom(supabase, apt);
   }

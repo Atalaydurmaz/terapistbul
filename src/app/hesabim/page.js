@@ -8,9 +8,10 @@ import { createClient } from '@/lib/supabase/client';
 import { fmtDateTr, getJoinWindow } from '@/lib/date';
 
 const statusConfig = {
-  bekliyor: { label: 'Bekliyor', bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
-  onayli:   { label: 'Onaylı',   bg: 'bg-green-100 text-green-700',  dot: 'bg-green-500'  },
-  iptal:    { label: 'İptal',    bg: 'bg-red-100 text-red-700',      dot: 'bg-red-500'    },
+  bekliyor:    { label: 'Bekliyor',    bg: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+  onayli:      { label: 'Onaylı',      bg: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+  iptal:       { label: 'İptal',       bg: 'bg-red-100 text-red-700',     dot: 'bg-red-500'   },
+  tamamlandi:  { label: 'Tamamlandı',  bg: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500'  },
 };
 
 function HesabimInner() {

@@ -60,7 +60,13 @@ export async function GET() {
     const userName = (session.user.name || '').trim();
     const supabase = createAdminClient();
 
-    const selectCols = 'id, name, email, phone, note, therapist_name, therapist_email, type, status, selected_day, selected_hour, daily_room_url, daily_room_name, therapist_rating, price, payment_status, transaction_id, paid_at, refunded_at, created_at, updated_at, direction';
+    // `select('*')` kullanıyoruz — daha önce açık kolon listesindeydi ama
+    // bazı migration'lar (supabase-add-payments.sql vb.) bazı ortamlarda
+    // çalıştırılmadığında `price` / `payment_status` gibi kolonlar yok ve
+    // tüm query 42703 hatası veriyordu. Bu da hata → empty array → kullanıcı
+    // "Henüz randevu almadınız" görüyor. `*` ile mevcut kolonlar ne ise
+    // onlarla devam ediyoruz; eksikler client mapping'te undefined olur.
+    const selectCols = '*';
 
     // 1) Primary match: email with wildcard %email% (case-insensitive). Catches
     // trailing spaces, "+tag" variants, and any stored whitespace that exact

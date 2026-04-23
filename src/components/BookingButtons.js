@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const allDays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 const shortDay = { Pazartesi: 'Pzt', Salı: 'Sal', Çarşamba: 'Çar', Perşembe: 'Per', Cuma: 'Cum', Cumartesi: 'Cmt', Pazar: 'Paz' };
@@ -17,6 +18,7 @@ function fmtBookingDate(ds) {
 
 export default function BookingButtons({ therapistName, therapistEmail, selectedSlot, onSlotClear, availability, dayHours }) {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [modal, setModal] = useState(null); // 'randevu' | 'mesaj' | null
   const [form, setForm] = useState({ name: '', email: '', phone: '', note: '' });
   const [sent, setSent] = useState(false);
@@ -105,6 +107,7 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
       return;
     }
     setLoading(true);
+    const submittedType = modal;
     try {
       const body = { ...form, therapistName, therapistEmail, type: modal };
       if (modal === 'randevu' && (pickedDay || pickedHour)) {
@@ -120,6 +123,17 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
     } catch {}
     setLoading(false);
     setSent(true);
+
+    // Randevu talebi ise kullanıcıyı 1.2 sn sonra /hesabim randevular
+    // sekmesine otomatik yönlendir — "alındı" onayını görecek kadar süre
+    // verip panelde direkt listeyi açıyoruz. Mesaj için yönlendirme yok
+    // (zaten terapistten dönüş bekleniyor, hesabim'e gitmek gerekmiyor).
+    if (submittedType === 'randevu') {
+      setTimeout(() => {
+        router.push('/hesabim?tab=randevular');
+        router.refresh();
+      }, 1200);
+    }
   };
 
   const closeModal = () => {
@@ -178,14 +192,27 @@ export default function BookingButtons({ therapistName, therapistEmail, selected
                 </h3>
                 <p className="text-sm text-slate-500 mb-5">
                   {modal === 'randevu' ? (
-                    <>Randevunuzu <a href="/hesabim" className="text-teal-600 hover:underline font-medium">Hesabım</a> sayfasından takip edebilirsiniz.</>
+                    <>Randevularım sekmesine yönlendiriliyorsunuz…</>
                   ) : (
                     <>En kısa sürede <strong>{form.email}</strong> adresinize dönüş yapılacaktır.</>
                   )}
                 </p>
-                <button onClick={closeModal} className="bg-teal-600 text-white font-semibold px-8 py-2.5 rounded-xl hover:bg-teal-700 transition-colors">
-                  Tamam
-                </button>
+                {modal === 'randevu' ? (
+                  <button
+                    onClick={() => { router.push('/hesabim?tab=randevular'); router.refresh(); }}
+                    className="bg-teal-600 text-white font-semibold px-8 py-2.5 rounded-xl hover:bg-teal-700 transition-colors inline-flex items-center gap-2"
+                  >
+                    Randevularıma Git
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </button>
+                ) : (
+                  <button onClick={closeModal} className="bg-teal-600 text-white font-semibold px-8 py-2.5 rounded-xl hover:bg-teal-700 transition-colors">
+                    Tamam
+                  </button>
+                )}
               </div>
             ) : (
               <>
