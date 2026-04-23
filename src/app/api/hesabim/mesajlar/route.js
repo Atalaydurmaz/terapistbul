@@ -86,10 +86,15 @@ export async function GET() {
     //    `client_id` FK to `clients.id` and matching on that.
     let byName = [];
     if (userName) {
+      // Wildcard match so trailing/leading whitespace, title prefixes, or
+      // minor capitalization drift don't hide the user's own appointments.
+      // ilike with %...% treats inner spaces as literal, so "Atalay Durmaz"
+      // still requires both words in order — avoids matching unrelated users.
+      const pattern = `%${userName.replace(/\s+/g, '%')}%`;
       const { data: nameRows, error: nameErr } = await supabase
         .from('appointments')
         .select(selectCols)
-        .ilike('name', userName)
+        .ilike('name', pattern)
         .order('created_at', { ascending: false });
       if (nameErr) {
         console.error('hesabim GET error (name fallback):', nameErr);
@@ -98,12 +103,23 @@ export async function GET() {
       }
     }
 
-    // Debug: log counts to help diagnose future "randevu yok" reports.
+    // Debug: log counts + sample of what's actually in DB so we can diagnose
+    // "randevu yok" reports from Vercel runtime logs.
+    let debugSample = [];
+    if ((byEmail || []).length === 0 && byName.length === 0) {
+      const { data: recent } = await supabase
+        .from('appointments')
+        .select('id, name, email, type, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      debugSample = recent || [];
+    }
     console.log('[hesabim GET]', {
       userEmail,
       userName,
       byEmailCount: (byEmail || []).length,
       byNameCount: byName.length,
+      debugSample,
     });
 
     // Merge + dedupe by id; keep email matches first (more trustworthy)
